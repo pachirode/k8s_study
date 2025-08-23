@@ -18,7 +18,7 @@ function os::install::sudo() {
 function os::install::hostname() {
     hostnamectl set-hostname $HOSTNAME
 
-    sudo cat >> /etc/hosts <<EOF
+    sudo tee /etc/hosts <<EOF
 
 ${HOSTNAME_MASTER_IP} k8s-master
 ${HOSTNAME_K8S_IP} k8s-01
@@ -66,6 +66,12 @@ function os::install::login-without-password() {
     chmod 644 ~/.ssh/id_rsa.pub
 
     # 复制公钥到目标主机（如果主机可达）
+    if ping -c 1 master &> /dev/null; then
+        ssh-copy-id root@master
+    else
+        echo "Warning: k8s-01 is not reachable"
+    fi
+
     if ping -c 1 k8s-01 &> /dev/null; then
         ssh-copy-id root@k8s-01
     else
@@ -101,5 +107,5 @@ function os::install::ENV() {
 }
 
 function os::install::software() {
-    sudo apt-get update && sudo apt install -y policycoreutils jq chrony conntrack ipvsadm ipset jq iptables curl sysstat wget socat git
+    sudo apt-get update && sudo apt install -y policycoreutils jq chrony conntrack ipvsadm ipset jq iptables curl sysstat wget socat git net-tools
 }

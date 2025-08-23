@@ -2,8 +2,8 @@
 function os::setting::stop-firewall() {
     systemctl stop nftable
     systemctl disable nftable
-    sudo /usr/sbin/iptables -F && sudo /usr/sbin/iptables -X && sudo /usr/sbin/iptables -F -t nat && sudo /usr/sbin/iptables -X -t nat
-    sudo /usr/sbin/iptables -P FORWARD ACCEPT
+    sudo iptables -F && sudo iptables -X && sudo iptables -F -t nat && sudo iptables -X -t nat
+    sudo iptables -P FORWARD ACCEPT
 }
 
 # 关闭 swap 分区，否则 kubelet 会启动失败 （设置 kubelet 启动参数 --fail-swap-on false 关闭 swap 检查）

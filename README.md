@@ -60,3 +60,24 @@ K8s 学习
 - `Metrics Server`
 - `Log`
 - `Registry`
+
+# 安装
+
+### cfssl
+
+创建证书
+
+### kubectl
+
+k8s 命令行管理工具
+
+### Ectd
+
+基于 `Raft` 构建的分布式数据库，常用于服务发现，共享配置和并发控制
+
+### 部署 Master 组件
+
+这些组件均以多个实例模式运行，当 `leader` 挂了之后重新选举产生新的，保证服务的可用性
+- `kube-apiserver`
+- `kube-scheduler`
+- `kube-controller-manager`
