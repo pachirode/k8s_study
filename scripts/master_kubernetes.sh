@@ -502,7 +502,9 @@ function master::k8s::kube-apiserver-log() {
 function master::k8s::kube-apiserver-info() {
   kubectl cluster-info
   kubectl get all --all-namespaces
-  kubectl get componentstatuses
+#  kubectl get componentstatuses
+  kubectl get --raw='/healthz?verbose'
+  kubectl get --raw='/readyz?verbose'
   sudo netstat -lnpt|grep kube
 }
 

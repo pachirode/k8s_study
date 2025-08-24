@@ -696,12 +696,54 @@ function worker::kubelet::status() {
   ls -l /etc/kubernetes/cert/kubelet-client-*
 }
 
+function worker::kubelet::verify-token() {
+  # 无法通过
+  curl -s --cacert /etc/kubernetes/cert/ca.pem https://${NODE_IPS[0]}:10250/metrics
+  curl -s --cacert /etc/kubernetes/cert/ca.pem -H "Authorization: Bearer 123456" https://${NODE_IPS[0]}:10250/metrics
+
+  # 权限不足
+  curl -s --cacert /etc/kubernetes/cert/ca.pem --cert /etc/kubernetes/cert/kube-controller-manager.pem --key /etc/kubernetes/cert/kube-controller-manager-key.pem https://${NODE_IPS[0]}:10250/metrics
+
+  # 创建 Admin 证书
+  curl -s --cacert /etc/kubernetes/cert/ca.pem --cert /opt/k8s/work/admin.pem --key /opt/k8s/work/admin-key.pem https://${NODE_IPS[0]}:10250/metrics|head
+}
+
 # 手动 approve server cert csr
 function worker::kubelet::approve() {
   kubectl get csr
   kubectl get csr | grep Pending | awk '{print $1}' | xargs kubectl certificate approve
   ls -l /etc/kubernetes/cert/kubelet-*
 }
+
+# Bearer token 授权和认证
+function worker::kubelet::bearer-token() {
+  source environment.sh
+  cd /opt/k8s/work
+
+  kubectl create sa kubelet-api-test
+  kubectl create clusterrolebinding kubelet-api-test --clusterrole=system:kubelet-api-admin --serviceaccount=default:kubelet-api-test
+  sudo tee kubelet-api-test-secret.yaml <<EOF
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: kubelet-api-test
+    annotations:
+      kubernetes.io/service-account.name: kubelet-api-test
+  type: kubernetes.io/service-account-token
+EOF
+
+  kubectl apply -f kubelet-api-test-secret.yaml
+  SECRET=$(kubectl get secrets | grep kubelet-api-test | awk '{print $1}')
+  TOKEN=$(kubectl describe secret ${SECRET} | grep -E '^token' | awk '{print $2}')
+  echo ${TOKEN}
+}
+
+function worker::kubelet::verify-bearer-token() {
+  worker::kubelet::bearer-token
+  curl -s --cacert /etc/kubernetes/cert/ca.pem -H "Authorization: Bearer ${TOKEN}" https://${NODE_IPS[0]}:10250/metrics | head
+
+}
+
 
 function worker::kube-proxy::create-cert() {
   source environment.sh
@@ -755,5 +797,90 @@ EOF
     do
       echo ">>> ${node_name}"
       scp kube-proxy.kubeconfig root@${node_name}:/etc/kubernetes/
+    done
+}
+
+# clientConnection.kubeconfig: 连接 apiserver 的 kubeconfig 文件
+# clusterCIDR: kube-proxy 根据 --cluster-cidr 判断集群内部和外部流量，指定 --cluster-cidr 或 --masquerade-all 选项后 kube-proxy 才会对访问 Service IP 的请求做 SNAT
+# hostnameOverride: 参数值必须与 kubelet 的值一致，否则 kube-proxy 启动后会找不到该 Node，从而不会创建任何 ipvs 规则
+# mode: 使用 ipvs 模式
+function worker::kube-proxy::create-config() {
+  source environment.sh
+  cd /opt/k8s/work
+
+  sudo tee kube-proxy-config.yaml.template <<EOF
+  kind: KubeProxyConfiguration
+  apiVersion: kubeproxy.config.k8s.io/v1alpha1
+  clientConnection:
+    burst: 200
+    kubeconfig: "/etc/kubernetes/kube-proxy.kubeconfig"
+    qps: 100
+  bindAddress: ##NODE_IP##
+  healthzBindAddress: ##NODE_IP##:10256
+  metricsBindAddress: ##NODE_IP##:10249
+  enableProfiling: true
+  clusterCIDR: ${CLUSTER_CIDR}
+  hostnameOverride: ##NODE_NAME##
+  mode: "ipvs"
+  portRange: ""
+  iptables:
+    masqueradeAll: false
+  ipvs:
+    scheduler: rr
+    excludeCIDRs: []
+EOF
+
+  for (( i=0; i < 3; i++ ))
+    do
+      echo ">>> ${NODE_NAMES[i]}"
+      sed -e "s/##NODE_NAME##/${NODE_NAMES[i]}/" -e "s/##NODE_IP##/${NODE_IPS[i]}/" kube-proxy-config.yaml.template > kube-proxy-config-${NODE_NAMES[i]}.yaml.template
+      scp kube-proxy-config-${NODE_NAMES[i]}.yaml.template root@${NODE_NAMES[i]}:/etc/kubernetes/kube-proxy-config.yaml
+    done
+}
+
+function worker::kube-proxy::service() {
+  source environment.sh
+  cd /opt/k8s/work
+
+  sudo tee kube-proxy.service <<EOF
+  [Unit]
+  Description=Kubernetes Kube-Proxy Server
+  Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+  After=network.target
+
+  [Service]
+  WorkingDirectory=${K8S_DIR}/kube-proxy
+  ExecStart=/opt/k8s/bin/kube-proxy \\
+    --config=/etc/kubernetes/kube-proxy-config.yaml \\
+    --v=2
+  Restart=on-failure
+  RestartSec=5
+  LimitNOFILE=65536
+
+  [Install]
+  WantedBy=multi-user.target
+EOF
+
+  for node_name in ${NODE_NAMES[@]}
+    do
+      echo ">>> ${node_name}"
+      scp kube-proxy.service root@${node_name}:/etc/systemd/system/
+    done
+
+  for node_ip in ${NODE_IPS[@]}
+    do
+      echo ">>> ${node_ip}"
+      ssh root@${node_ip} "mkdir -p ${K8S_DIR}/kube-proxy"
+      ssh root@${node_ip} "modprobe ip_vs_rr"
+      ssh root@${node_ip} "systemctl daemon-reload && systemctl enable kube-proxy && systemctl restart kube-proxy"
+    done
+}
+
+function wroker::kube-proxy::status() {
+  source environment.sh
+  for node_ip in ${NODE_IPS[@]}
+    do
+      echo ">>> ${node_ip}"
+      ssh root@${node_ip} "systemctl status kube-proxy|grep Active"
     done
 }
