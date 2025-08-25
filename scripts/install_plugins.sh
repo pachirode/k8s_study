@@ -14,7 +14,16 @@ function plugins::install::cilium() {
   curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
   helm repo add cilium https://helm.cilium.io/
   helm repo update
-  helm install cilium cilium/cilium --namespace kube-system --set image.tag=1.17.6
+  # 和版本无关，cilium 会指定默认版本
+  helm install cilium cilium/cilium --namespace kube-system --set image.tag=v1.18.1
+
+  cp /opt/cni/bin/cilium-cni /opt/k8s/bin/
+
+}
+
+function worker::uninstall::cilium() {
+  helm uninstall cilium -n kube-system
+  kubectl -n kube-system delete pod $1 --grace-period=0 --force
 }
 
 function plugins::install::cilium::process() {
