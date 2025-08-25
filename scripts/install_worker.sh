@@ -871,7 +871,8 @@ EOF
     do
       echo ">>> ${node_ip}"
       ssh root@${node_ip} "mkdir -p ${K8S_DIR}/kube-proxy"
-      ssh root@${node_ip} "modprobe ip_vs_rr"
+      # 用于实现负载均衡
+      ssh root@${node_ip} "/usr/sbin/modprobe ip_vs_rr"
       ssh root@${node_ip} "systemctl daemon-reload && systemctl enable kube-proxy && systemctl restart kube-proxy"
     done
 }
@@ -882,5 +883,21 @@ function wroker::kube-proxy::status() {
     do
       echo ">>> ${node_ip}"
       ssh root@${node_ip} "systemctl status kube-proxy|grep Active"
+    done
+}
+
+function worker::kube-proxy::log() {
+  sudo journalctl -u kube-proxy
+  sudo netstat -lnpt|grep kube-prox
+}
+
+function worker::ipvsadm::show() {
+  source environment.sh
+  sudo apt install -y ipvsadm
+
+  for node_ip in ${NODE_IPS[@]}
+    do
+      echo ">>> ${node_ip}"
+      ssh root@${node_ip} "/usr/sbin/ipvsadm -ln"
     done
 }

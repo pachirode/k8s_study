@@ -78,6 +78,7 @@ k8s 命令行管理工具
 ### 部署 Master 组件
 
 这些组件均以多个实例模式运行，当 `leader` 挂了之后重新选举产生新的，保证服务的可用性
+
 - `kube-apiserver`
 - `kube-scheduler`
 - `kube-controller-manager`
@@ -86,33 +87,42 @@ k8s 命令行管理工具
 
 - `kube-nginx`
 - `containerd`
-  - 如果想要使用 `docker` 需要配合 `flannel`
+    - 如果想要使用 `docker` 需要配合 `flannel`
 - `kubelet`
-  - 接受 `kube-apiserver` 发送请求，管理 `Pod`，执行交互命令
+    - 接受 `kube-apiserver` 发送请求，管理 `Pod`，执行交互命令
 - `kube-proxy`
 - `cilium`
 
 ##### containerd 镜像
 
 - 修改 `/etc/containerd/config.toml`，新版本已经废弃
-  - 修改完需要 `systemctl restart containerd.service`
+    - 修改完需要 `systemctl restart containerd.service`
 - 放到一个单独的文件夹中，并修改 `/etc/containerd/config.toml` `config_path`
-  - 只需要第一次修改配置文件后重启
+    - 只需要第一次修改配置文件后重启
 
-### Bootstrap Token Auth 和授权
+##### Bootstrap Token Auth 和授权
 
-`kubelet` 启动时会查找 `--config` 参数对应的文件，如果不存在则使用 `--bootstrap-kubeconfig` 参数指定 `kubeconfig` 发送证书签名（`CSR`）
-`kube-apiserver` 收到 `CSR` 请求之后，进行 `Token` 认证，认证通过 user = `system:bootstrap:<token-id>`, group = `system:bootstrappers`
+`kubelet` 启动时会查找 `--config` 参数对应的文件，如果不存在则使用 `--bootstrap-kubeconfig` 参数指定 `kubeconfig`
+发送证书签名（`CSR`）
+`kube-apiserver` 收到 `CSR` 请求之后，进行 `Token` 认证，认证通过 user = `system:bootstrap:<token-id>`,
+group = `system:bootstrappers`
 默认情况下，user 和 group 没有创建 `CSR` 的权限，需要创建 `ClusterRoleBinding`
 
 ```go
-kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --group=system:bootstrappers
+kubectl create clusterrolebinding kubelet-bootstrap --clusterrole = system:node-bootstrapper --group = system:bootstrappers
 ```
 
-### 自动 Approve CSR，生成 kubelet client 证书
+##### 自动 Approve CSR，生成 kubelet client 证书
+
 `kubelet` 创建 `CSR` 请求之后，下一步需要创建被 `approve`
+
 - `kube-controller-manager` 自动 `approve`
 - 手动命令 `kubectl certificate approve <csr-name>`
 
 `CSR` 被 `approve` 之后，`kubelet` 向 `kube-controller-manager` 请求创建 `client` 证书
+
+### 部署网络组件
+
+支持多种网络插件，生产环境中 `Cilium` 使用比较多；部署完网络插件还需要部署 `DNS` (`CoreDNS`)
+
 
