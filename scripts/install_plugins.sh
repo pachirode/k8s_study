@@ -66,6 +66,8 @@ function plugins::cilium::create-pod() {
           - containerPort: 80
 EOF
 
+#  nerdctl -n k8s.io images | grep busybox
+#  nerdctl -n k8s.io pull busybox:latest
   kubectl create -f busybox-for-cilium-test-ds.yaml
 }
 
@@ -74,7 +76,7 @@ function plugins::cilium::status-pod() {
 }
 
 function plugins::cilium::ping-pod() {
-  kubectl exec -it busybox-for-cilium-test-svzn6 -- ping $1
+  kubectl exec -it $1 -- ping $2
 }
 
 function plugins::coreDNS::install() {
@@ -84,9 +86,65 @@ function plugins::coreDNS::install() {
   git clone https://github.com/coredns/deployment.git
   mv deployment coredns-deployment
   cd /opt/k8s/work/coredns-deployment/kubernetes
+#  nerdctl -n k8s.io pull coredns/coredns:1.9.4
   ./deploy.sh -i ${CLUSTER_DNS_SVC_IP} -d ${CLUSTER_DNS_DOMAIN} | kubectl apply -f -
 }
 
 function plugins::coreDNS::status() {
   kubectl get pods -n kube-system -l k8s-app=kube-dns
+}
+
+function plugins::coreDNS::test() {
+  source environment.sh
+  cd /opt/k8s/work
+
+  sudo tee busybox-ds.yml <<EOF
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: busybox-ds
+    labels:
+      app: busybox-ds
+  spec:
+    type: NodePort
+    selector:
+      app: busybox-ds
+    ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+    name: busybox-ds
+    labels:
+      addonmanager.kubernetes.io/mode: Reconcile
+  spec:
+    selector:
+      matchLabels:
+        app: busybox-ds
+    template:
+      metadata:
+        labels:
+          app: busybox-ds
+      spec:
+        containers:
+        - name: my-busybox
+          image: busybox:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - tail
+            - "-f"
+            - "/dev/null"
+          ports:
+          - containerPort: 80
+EOF
+
+  kubectl create -f busybox-ds.yml
+}
+
+function plugins::coreDNS::verify() {
+  kubectl get pods -lapp=busybox-ds -o wide
+  kubectl exec -it $1 -- cat /etc/resolv.conf
+  cilium connectivity test
 }
