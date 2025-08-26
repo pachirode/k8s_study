@@ -17,7 +17,7 @@ function plugins::install::cilium() {
   # 和版本无关，cilium 会指定默认版本
   helm install cilium cilium/cilium --namespace kube-system --set image.tag=v1.18.1
 
-  cp /opt/cni/bin/cilium-cni /opt/k8s/bin/
+  ln -s /opt/cni/bin/cilium-cni /opt/k8s/bin/cilium-cni
 
 }
 
@@ -75,4 +75,18 @@ function plugins::cilium::status-pod() {
 
 function plugins::cilium::ping-pod() {
   kubectl exec -it busybox-for-cilium-test-svzn6 -- ping $1
+}
+
+function plugins::coreDNS::install() {
+  source environment.sh
+  cd /opt/k8s/work
+
+  git clone https://github.com/coredns/deployment.git
+  mv deployment coredns-deployment
+  cd /opt/k8s/work/coredns-deployment/kubernetes
+  ./deploy.sh -i ${CLUSTER_DNS_SVC_IP} -d ${CLUSTER_DNS_DOMAIN} | kubectl apply -f -
+}
+
+function plugins::coreDNS::status() {
+  kubectl get pods -n kube-system -l k8s-app=kube-dns
 }

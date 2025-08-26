@@ -100,6 +100,10 @@ k8s 命令行管理工具
 - 放到一个单独的文件夹中，并修改 `/etc/containerd/config.toml` `config_path`
     - 只需要第一次修改配置文件后重启
 
+> `nerdctl` 命令来说，会自动使用 `/etc/containerd/certs.d` 目录下的配置镜像加速
+> `ctr` 命令，需要指定 `--hosts-dir=/etc/containerd/certs.d`
+> `ctr --debug=true -n k8s.io i pull --hosts-dir=/etc/containerd/certs.d registry.k8s.io/sig-storage/csi-provisioner:v3.5.0`
+
 ##### Bootstrap Token Auth 和授权
 
 `kubelet` 启动时会查找 `--config` 参数对应的文件，如果不存在则使用 `--bootstrap-kubeconfig` 参数指定 `kubeconfig`
