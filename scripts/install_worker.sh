@@ -161,33 +161,72 @@ function worker::contairned::config() {
   source environment.sh
   cd /opt/k8s/work
 
-  sudo tee contairned-config.toml <<EOF
+  sudo tee containerd-config_bck.toml <<EOF
   version = 2
   root = "${CONTAINERD_DIR}/root"
   state = "${CONTAINERD_DIR}/state"
 
   [plugins]
-    [plugins."io.contairned.grpc.v1.cri"]
+    [plugins."io.containerd.grpc.v1.cri"]
       sandbox_image = "registry.cn-beijing.aliyuncs.com/zhoujun/pause-amd64:3.1"
-      config_path = "/etc/contairned/certs.d"
-      [plugins."io.contairned.grpc.v1.cri".cni]
+      config_path = "/etc/containerd/certs.d"
+      [plugins."io.containerd.grpc.v1.cri".cni]
         bin_dir = "/opt/k8s/bin"
         conf_dir = "/etc/cni/net.d"
-    [plugins."io.contairned.runtime.v1.linux"]
-      shim = "contairned-shim"
+    [plugins."io.containerd.runtime.v1.linux"]
+      shim = "containerd-shim"
+      runtime = "runc"
+      runtime_root = ""
+      no_shim = false
+      shim_debug = false
+EOF
+  sudo tee containerd-config.toml <<EOF
+  version = 2
+  root = "/data/k8s/containerd/root"
+  state = "/data/k8s/containerd/state"
+
+  [plugins]
+    [plugins."io.containerd.grpc.v1.cri"]
+      # Sandbox 镜像
+      sandbox_image = "registry.cn-beijing.aliyuncs.com/zhoujun/pause-amd64:3.1"
+
+      # 证书目录（用于私有仓库 TLS）
+      config_path = "/etc/containerd/certs.d"
+
+      [plugins."io.containerd.grpc.v1.cri".cni]
+        bin_dir = "/opt/k8s/bin"
+        conf_dir = "/etc/cni/net.d"
+
+      # 🔹 镜像加速配置
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+
+        # Docker Hub 加速
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+          endpoint = ["https://docker.m.daocloud.io"]
+
+        # Kubernetes 官方组件镜像加速（pause, coredns 等）
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."k8s.gcr.io"]
+          endpoint = ["https://registry.aliyuncs.com/google_containers"]
+
+        # Quay.io 镜像加速（Cilium 等）
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."quay.io"]
+          endpoint = ["https://quay.m.daocloud.io"]
+
+    [plugins."io.containerd.runtime.v1.linux"]
+      shim = "containerd-shim"
       runtime = "runc"
       runtime_root = ""
       no_shim = false
       shim_debug = false
 EOF
 
-  for node_ip in ${NODE_IPS[@]}
-    do
-      echo ">>> ${node_ip}"
-      ssh root@${node_ip} "mkdir -p /etc/contairned/ ${CONTAINERD_DIR}/{root,state}"
-      scp contairned-config.toml root@${node_ip}:/etc/contairned/config.toml
-    done
-
+ for node_ip in ${NODE_IPS[@]}
+   do
+     echo ">>> ${node_ip}"
+     ssh root@${node_ip} "mkdir -p /etc/containerd/ ${CONTAINERD_DIR}/{root,state}"
+     scp containerd-config.toml root@${node_ip}:/etc/containerd/config.toml
+     scp containerd-config_bck.toml root@${node_ip}:/etc/containerd/config_bck.toml
+   done
 }
 
 function worker::contairned::service() {
@@ -231,8 +270,8 @@ function worker::contairned::crictl() {
   cd /opt/k8s/work
 
   sudo tee crictl.yaml <<EOF
-  runtime-endpoint: unix:///run/contairned/contairned.sock
-  image-endpoint: unix:///run/contairned/contairned.sock
+  runtime-endpoint: unix:///run/containerd/containerd.sock
+  image-endpoint: unix:///run/containerd/containerd.sock
   timeout: 10
   debug: false
 EOF
@@ -391,6 +430,38 @@ EOF
 
   [host."https://rocks-canonical.m.daocloud.io"]
     capabilities = ["pull", "resolve", "push"]
+EOF
+
+  # registry-1.docker.io 镜像加速
+  sudo mkdir -p /etc/contairned/certs.d/registry-1.docker.io
+  sudo tee /etc/contairned/certs.d/registry-1.docker.io/hosts.toml << EOF
+  server = "https://registry-1.docker.io"
+
+  [host."https://registry.docker-cn.com"]
+    capabilities = ["pull", "resolve"]
+
+  [host."https://docker.m.daocloud.io"]
+    capabilities = ["pull", "resolve"]
+
+  [host."https://docker.mirrors.ustc.edu.cn"]
+    capabilities = ["pull", "resolve"]
+
+  [host."https://mirror.iscas.ac.cn"]
+    capabilities = ["pull", "resolve"]
+
+  [host."https://dockerproxy.com"]
+    capabilities = ["pull", "resolve"]
+
+  [host."https://dockerpull.com"]
+    capabilities = ["pull", "resolve"]
+
+  [host."https://reg-mirror.qiniu.com"]
+    capabilities = ["pull", "resolve"]
+
+  # ⚠️ 如果你确实要用 163 源，需要额外允许 http（默认不建议）
+  # [host."http://hub-mirror.c.163.com"]
+  #   capabilities = ["pull", "resolve"]
+  #   skip_verify = true
 EOF
 END
 
