@@ -148,3 +148,57 @@ function plugins::coreDNS::verify() {
   kubectl exec -it $1 -- cat /etc/resolv.conf
   cilium connectivity test
 }
+
+function plugins::install::dashboard() {
+  # 1. 添加 kubernetes-dashboard Helm 仓库
+  helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+  # 2. 安装 dashboard
+  helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard
+  # 3. 转发流量到 dashboard 控制面
+  kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 9443:443 --address 0.0.0.0
+}
+
+function plugins::dashboard::create-token() {
+  kubectl -n kubernetes-dashboard create sa dashboard-admin # 1. 创建 ServiceAccount
+  kubectl create clusterrolebinding dashboard-admin --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:dashboard-admin # 创建 ClusterRoleBinding
+  DASHBOARD_LOGIN_TOKEN=$(kubectl -n kubernetes-dashboard create token dashboard-admin)
+  echo ${DASHBOARD_LOGIN_TOKEN}
+}
+
+function plugins::dashboard::kubeconfig() {
+  source environment.sh
+
+  # 设置集群参数
+  kubectl config set-cluster kubernetes \
+    --certificate-authority=/etc/kubernetes/cert/ca.pem \
+    --embed-certs=true \
+    --server=${KUBE_APISERVER} \
+    --kubeconfig=dashboard.kubeconfig
+
+  # 设置客户端认证参数，使用上面创建的 Token
+  kubectl config set-credentials dashboard_user \
+    --token=${DASHBOARD_LOGIN_TOKEN} \
+    --kubeconfig=dashboard.kubeconfig
+
+  # 设置上下文参数
+  kubectl config set-context default \
+    --cluster=kubernetes \
+    --user=dashboard_user \
+    --kubeconfig=dashboard.kubeconfig
+
+  # 设置默认上下文
+  kubectl config use-context default --kubeconfig=dashboard.kubeconfig
+}
+
+function plugins::install::prometheus() {
+  cd /opt/k8s/work
+
+  git clone -b v0.14.0 https://github.com/coreos/kube-prometheus.git
+  cd kube-prometheus/
+  kubectl apply --server-side -f manifests/setup
+  kubectl wait \
+  	--for condition=Established \
+  	--all CustomResourceDefinition \
+  	--namespace=monitoring
+  kubectl apply -f manifests/
+}

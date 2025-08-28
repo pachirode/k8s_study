@@ -129,4 +129,18 @@ kubectl create clusterrolebinding kubelet-bootstrap --clusterrole = system:node-
 
 支持多种网络插件，生产环境中 `Cilium` 使用比较多；部署完网络插件还需要部署 `DNS` (`CoreDNS`)
 
+### 部署 `Kubernetes Dashboard`
+
+用来提供界面化访问 `Kubernetes` 集群
+
+### 部署 `Prometheus`
+
+`kube-prometheus` 是一整套监控解决方案，它使用 Prometheus 采集集群指标，Grafana 做展示，包含如下组件
+- `The Prometheus Operator`
+- `Highly available Prometheus`
+- `Highly available Alertmanager`
+- `Prometheus node-exporter`
+- `Prometheus Adapter for Kubernetes Metrics APIs (k8s-prometheus-adapter)`
+- `kube-state-metrics`
+- `Grafana`
 
