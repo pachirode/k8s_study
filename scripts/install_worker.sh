@@ -131,7 +131,7 @@ function worker::nginx::log() {
   journalctl -u kube-nginx
 }
 
-function worker::install::contairned() {
+function worker::install::containerd() {
   source environment.sh
   cd /opt/k8s/work
 
@@ -139,10 +139,10 @@ function worker::install::contairned() {
   sudo -E wget https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.34.0/crictl-v1.34.0-linux-amd64.tar.gz \
     https://github.com/opencontainers/runc/releases/download/v1.3.0/runc.amd64 \
     https://github.com/containernetworking/plugins/releases/download/v1.7.1/cni-plugins-linux-amd64-v1.7.1.tgz \
-    https://github.com/contairned/contairned/releases/download/v2.1.4/contairned-2.1.4-linux-amd64.tar.gz
+    https://github.com/containerd/containerd/releases/download/v2.1.4/containerd-2.1.4-linux-amd64.tar.gz
 
-  sudo mkdir contairned
-  sudo tar -xvf contairned-2.1.4-linux-amd64.tar.gz -C contairned
+  sudo mkdir containerd
+  sudo tar -xvf containerd-2.1.4-linux-amd64.tar.gz -C containerd
   sudo tar -xvf crictl-v1.34.0-linux-amd64.tar.gz
 
   sudo mkdir cni-plugins
@@ -152,12 +152,12 @@ function worker::install::contairned() {
   for node_ip in ${NODE_IPS[@]}
     do
       echo ">>> ${node_ip}"
-      scp contairned/bin/*  crictl  cni-plugins/*  runc  root@${node_ip}:/opt/k8s/bin
+      scp containerd/bin/*  crictl  cni-plugins/*  runc  root@${node_ip}:/opt/k8s/bin
       ssh root@${node_ip} "chmod a+x /opt/k8s/bin/* && mkdir -p /etc/cni/net.d"
     done
 }
 
-function worker::contairned::config() {
+function worker::containerd::config() {
   source environment.sh
   cd /opt/k8s/work
 
@@ -229,20 +229,20 @@ EOF
    done
 }
 
-function worker::contairned::service() {
+function worker::containerd::service() {
   source environment.sh
   cd /opt/k8s/work
 
-  sudo tee contairned.service <<EOF
+  sudo tee containerd.service <<EOF
   [Unit]
-  Description=contairned container runtime
-  Documentation=https://contairned.io
+  Description=containerd container runtime
+  Documentation=https://containerd.io
   After=network.target
 
   [Service]
   Environment="PATH=/opt/k8s/bin:/bin:/sbin:/usr/bin:/usr/sbin"
   ExecStartPre=/sbin/modprobe overlay
-  ExecStart=/opt/k8s/bin/contairned
+  ExecStart=/opt/k8s/bin/containerd
   Restart=always
   RestartSec=5
   Delegate=yes
@@ -259,13 +259,13 @@ EOF
   for node_ip in ${NODE_IPS[@]}
     do
       echo ">>> ${node_ip}"
-      scp contairned.service root@${node_ip}:/etc/systemd/system
-      ssh root@${node_ip} "systemctl enable contairned && systemctl restart contairned"
+      scp containerd.service root@${node_ip}:/etc/systemd/system
+      ssh root@${node_ip} "systemctl enable containerd && systemctl restart containerd"
     done
 }
 
 # 提供类似 docker 命令
-function worker::contairned::crictl() {
+function worker::containerd::crictl() {
   source environment.sh
   cd /opt/k8s/work
 
@@ -284,12 +284,12 @@ EOF
 }
 
 # 兼容 Docker CLI
-function worker::install::nerdct() {
+function worker::install::nerdctl() {
   source environment.sh
   cd /opt/k8s/work
 
   export https_proxy=http://192.168.1.6:7890
-  sudo -E wget https://github.com/contairned/nerdctl/releases/download/v2.1.3/nerdctl-2.1.3-linux-amd64.tar.gz
+  sudo -E wget https://github.com/containerd/nerdctl/releases/download/v2.1.3/nerdctl-2.1.3-linux-amd64.tar.gz
   tar -xvzf nerdctl-2.1.3-linux-amd64.tar.gz
 
   for node_ip in ${NODE_IPS[@]}
@@ -300,15 +300,15 @@ function worker::install::nerdct() {
 }
 
 # 配置镜像加速
-function worker::contairned::image() {
+function worker::containerd::image() {
   source environment.sh
   cd /opt/k8s/work
 
-  sudo tee contairned-image-mirror.sh <<END
+  sudo tee containerd-image-mirror.sh <<END
 
   # docker hub 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/docker.io
-  sudo tee /etc/contairned/certs.d/docker.io/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/docker.io
+  sudo tee /etc/containerd/certs.d/docker.io/hosts.toml << EOF
   server = "https://docker.io"
 
   [host."https://registry.docker-cn.com"]
@@ -343,8 +343,8 @@ function worker::contairned::image() {
 EOF
 
   # registry.k8s.io 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/registry.k8s.io
-  sudo tee /etc/contairned/certs.d/registry.k8s.io/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/registry.k8s.io
+  sudo tee /etc/containerd/certs.d/registry.k8s.io/hosts.toml << EOF
   server = "https://registry.k8s.io"
 
   [host."https://k8s.m.daocloud.io"]
@@ -352,8 +352,8 @@ EOF
 EOF
 
   # docker.elastic.co 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/docker.elastic.co
-  sudo tee /etc/contairned/certs.d/docker.elastic.co/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/docker.elastic.co
+  sudo tee /etc/containerd/certs.d/docker.elastic.co/hosts.toml << EOF
   server = "https://docker.elastic.co"
 
   [host."https://elastic.m.daocloud.io"]
@@ -361,8 +361,8 @@ EOF
 EOF
 
   # gcr.io 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/gcr.io
-  sudo tee /etc/contairned/certs.d/gcr.io/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/gcr.io
+  sudo tee /etc/containerd/certs.d/gcr.io/hosts.toml << EOF
   server = "https://gcr.io"
 
   [host."https://gcr.m.daocloud.io"]
@@ -370,8 +370,8 @@ EOF
 EOF
 
   # ghcr.io 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/ghcr.io
-  sudo tee /etc/contairned/certs.d/ghcr.io/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/ghcr.io
+  sudo tee /etc/containerd/certs.d/ghcr.io/hosts.toml << EOF
   server = "https://ghcr.io"
 
   [host."https://ghcr.m.daocloud.io"]
@@ -379,8 +379,8 @@ EOF
 EOF
 
   # k8s.gcr.io 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/k8s.gcr.io
-  sudo tee /etc/contairned/certs.d/k8s.gcr.io/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/k8s.gcr.io
+  sudo tee /etc/containerd/certs.d/k8s.gcr.io/hosts.toml << EOF
   server = "https://k8s.gcr.io"
 
   [host."https://k8s-gcr.m.daocloud.io"]
@@ -388,8 +388,8 @@ EOF
 EOF
 
   # mcr.m.daocloud.io 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/mcr.microsoft.com
-  sudo tee /etc/contairned/certs.d/mcr.microsoft.com/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/mcr.microsoft.com
+  sudo tee /etc/containerd/certs.d/mcr.microsoft.com/hosts.toml << EOF
   server = "https://mcr.microsoft.com"
 
   [host."https://mcr.m.daocloud.io"]
@@ -397,8 +397,8 @@ EOF
 EOF
 
   # nvcr.io 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/nvcr.io
-  sudo tee /etc/contairned/certs.d/nvcr.io/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/nvcr.io
+  sudo tee /etc/containerd/certs.d/nvcr.io/hosts.toml << EOF
   server = "https://nvcr.io"
 
   [host."https://nvcr.m.daocloud.io"]
@@ -406,8 +406,8 @@ EOF
 EOF
 
   # quay.io 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/quay.io
-  sudo tee /etc/contairned/certs.d/quay.io/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/quay.io
+  sudo tee /etc/containerd/certs.d/quay.io/hosts.toml << EOF
   server = "https://quay.io"
 
   [host."https://quay.m.daocloud.io"]
@@ -415,8 +415,8 @@ EOF
 EOF
 
   # registry.jujucharms.com 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/registry.jujucharms.com
-  sudo tee /etc/contairned/certs.d/registry.jujucharms.com/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/registry.jujucharms.com
+  sudo tee /etc/containerd/certs.d/registry.jujucharms.com/hosts.toml << EOF
   server = "https://registry.jujucharms.com"
 
   [host."https://jujucharms.m.daocloud.io"]
@@ -424,8 +424,8 @@ EOF
 EOF
 
   # rocks.canonical.com 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/rocks.canonical.com
-  sudo tee /etc/contairned/certs.d/rocks.canonical.com/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/rocks.canonical.com
+  sudo tee /etc/containerd/certs.d/rocks.canonical.com/hosts.toml << EOF
   server = "https://rocks.canonical.com"
 
   [host."https://rocks-canonical.m.daocloud.io"]
@@ -433,8 +433,8 @@ EOF
 EOF
 
   # registry-1.docker.io 镜像加速
-  sudo mkdir -p /etc/contairned/certs.d/registry-1.docker.io
-  sudo tee /etc/contairned/certs.d/registry-1.docker.io/hosts.toml << EOF
+  sudo mkdir -p /etc/containerd/certs.d/registry-1.docker.io
+  sudo tee /etc/containerd/certs.d/registry-1.docker.io/hosts.toml << EOF
   server = "https://registry-1.docker.io"
 
   [host."https://registry.docker-cn.com"]
@@ -465,17 +465,17 @@ EOF
 EOF
 END
 
-  sudo chmod +x contairned-image-mirror.sh
+  sudo chmod +x containerd-image-mirror.sh
   for node_ip in ${NODE_IPS[@]}
     do
       echo ">>> ${node_ip}"
-      scp contairned-image-mirror.sh root@${node_ip}:/opt/k8s/bin
-      ssh root@${node_ip} "/opt/k8s/bin/contairned-image-mirror.sh"
+      scp containerd-image-mirror.sh root@${node_ip}:/opt/k8s/bin
+      ssh root@${node_ip} "/opt/k8s/bin/containerd-image-mirror.sh"
     done
 }
 
 # 验证镜像源
-function worker::contairned::image-verify() {
+function worker::containerd::image-verify() {
   # registry.k8s.io
   nerdctl --debug=true image pull registry.k8s.io/sig-storage/csi-provisioner:v3.5.0
   nerdctl images
@@ -645,15 +645,15 @@ function worker::kubelet::service() {
   [Unit]
   Description=Kubernetes Kubelet
   Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-  After=contairned.service
-  Requires=contairned.service
+  After=containerd.service
+  Requires=containerd.service
 
   [Service]
   WorkingDirectory=${K8S_DIR}/kubelet
   ExecStart=/opt/k8s/bin/kubelet \\
     --bootstrap-kubeconfig=/etc/kubernetes/kubelet-bootstrap.kubeconfig \\
     --cert-dir=/etc/kubernetes/cert \\
-    --container-runtime-endpoint=unix:///var/run/contairned/contairned.sock \\
+    --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
     --root-dir=${K8S_DIR}/kubelet \\
     --kubeconfig=/etc/kubernetes/kubelet.kubeconfig \\
     --config=/etc/kubernetes/kubelet-config.yaml \\

@@ -9,41 +9,42 @@ function verify::nginx-ds() {
   cd /opt/k8s/work
 
   sudo tee nginx-ds.yml <<EOF
-  apiVersion: v1
-  kind: Service
-  metadata:
-    name: nginx-ds
-    labels:
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ds
+  labels:
+    app: nginx-ds
+spec:
+  type: NodePort
+  selector:
+    app: nginx-ds
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-ds
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
       app: nginx-ds
-  spec:
-    type: NodePort
-    selector:
-      app: nginx-ds
-    ports:
-    - name: http
-      port: 80
-      targetPort: 80
-  apiVersion: apps/v1
-  kind: DaemonSet
-  metadata:
-    name: nginx-ds
-    labels:
-      addonmanager.kubernetes.io/mode: Reconcile
-  spec:
-    selector:
-      matchLabels:
+  template:
+    metadata:
+      labels:
         app: nginx-ds
-    template:
-      metadata:
-        labels:
-          app: nginx-ds
-      spec:
-        containers:
-        - name: my-nginx
-          image: nginx:latest
-          imagePullPolicy: IfNotPresent
-          ports:
-          - containerPort: 80
+    spec:
+      containers:
+      - name: my-nginx
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
 EOF
 }
 
@@ -89,6 +90,6 @@ function verify::node-port() {
   for node_ip in ${NODE_IPS[@]}
     do
       echo ">>> ${node_ip}"
-      ssh ${node_ip} "curl -s ${node_ip}:31841"
+      ssh ${node_ip} "curl -s ${node_ip}:$1"
     done
 }
