@@ -202,3 +202,17 @@ function plugins::install::prometheus() {
   	--namespace=monitoring
   kubectl apply -f manifests/
 }
+
+function plugins::prometheus::status() {
+  kubectl -n monitoring get pods
+#  kubectl -n monitoring describe pod $1
+  kubectl top pods -n monitoring
+}
+
+function prometheus::ui() {
+  kubectl port-forward --address 0.0.0.0 pod/prometheus-k8s-0 -n monitoring 9090:9090
+}
+
+function prometheus::grafana-ui() {
+  kubectl port-forward --address 0.0.0.0 svc/grafana -n monitoring 3000:3000
+}
