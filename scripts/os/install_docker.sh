@@ -40,5 +40,5 @@ EOF
 
   docker info
   sudo usermod -aG docker $USER
-  #  newgrp docker # 或者重启会话
+#  newgrp docker # 或者重启会话
 }
