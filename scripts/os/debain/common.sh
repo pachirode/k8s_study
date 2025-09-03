@@ -5,5 +5,5 @@ function install::common() {
     gcc g++ libc6-dev zlib1g-dev \
     git-lfs telnet lrzsz jq \
     libexpat1-dev libssl-dev \
-    fzf neovim git
+    fzf neovim git zsh
 }

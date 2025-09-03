@@ -142,3 +142,32 @@ kind delete cluster -n test-k8s
 # 删除所有集群
 kind delete clusters -A
 ```
+
+# 部署 Onex
+
+### 安装 Kind
+
+### 安装 Kubectl
+
+### 访问集群
+
+如果创建的集群名字为 `XXX`，在 `$HOME/.kube/config` 文件中 `context` 的名字为 `kind-XXX`
+
+### 部署存储服务
+
+存储服务是有状态的服务，我们需要使用 `Kubernetes` 的 `StatefulSet` 资源来部署类似
+
+- `MariaDB`
+- `Redis`
+- `Etcd`
+- `Mongo`
+
+```bash
+# 名为mariadb 的 Secret 资源，Secret 中会保存 MariaDB 的用户名和密码，该 Secret 会在 StatefulSet 中被挂载为 Pod 的环境变量
+kubectl create secret generic mariadb --from-literal=MYSQL_ROOT_PASSWORD='' --from-literal=MYSQL_DATABASE=onex --from-literal=MYSQL_USER=onex --from-literal=MYSQL_PASSWORD=''
+
+# 在 infra 命名空间下创建资源
+# 名为 mariadb 的 StatefulSet 资源，StatefulSet 会创建一个有状态的 Pod：mariadb-0
+# 名为 mariadb 的 Service 资源，Kubernetes 集群内的通信可以通过 Service 来做服务发现。Service 是一个域名，Kubernetes 的 DNS 服务会解析 Service 名为真正的 Pod IP
+kubectl -n infra apply -f manifests/installation/storage/mariadb
+```
