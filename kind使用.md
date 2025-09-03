@@ -164,10 +164,31 @@ kind delete clusters -A
 
 ```bash
 # 名为mariadb 的 Secret 资源，Secret 中会保存 MariaDB 的用户名和密码，该 Secret 会在 StatefulSet 中被挂载为 Pod 的环境变量
-kubectl create secret generic mariadb --from-literal=MYSQL_ROOT_PASSWORD='' --from-literal=MYSQL_DATABASE=onex --from-literal=MYSQL_USER=onex --from-literal=MYSQL_PASSWORD=''
+kubectl -n infra create secret generic mariadb --from-literal=MYSQL_ROOT_PASSWORD='' --from-literal=MYSQL_DATABASE=onex --from-literal=MYSQL_USER=onex --from-literal=MYSQL_PASSWORD=''
 
 # 在 infra 命名空间下创建资源
 # 名为 mariadb 的 StatefulSet 资源，StatefulSet 会创建一个有状态的 Pod：mariadb-0
 # 名为 mariadb 的 Service 资源，Kubernetes 集群内的通信可以通过 Service 来做服务发现。Service 是一个域名，Kubernetes 的 DNS 服务会解析 Service 名为真正的 Pod IP
 kubectl -n infra apply -f manifests/installation/storage/mariadb
+
+# 宿主机拉取镜像并推送到 Kind 集群
+docker pull mariadb:11.2.2
+kind load docker-image mariadb:11.2.2 --name onex
+docker exec -it onex-worker2 crictl images
+
+# 检查集群是否启动
+kubectl -n infra get statefulset -l app=mariadb
+kubectl -n infra get pods -l app=mariadb
+kubectl -n infra get service -l app=mariadb
+
+# 连接数据库
+mariadb -h 127.0.0.1 -P 30000 -uroot -p'onex(#)666' --skip-ssl
+
+kubectl -n infra apply -f manifests/installation/storage/redis
+redis-cli -h 127.0.0.1 -p 30001 -a 'onex(#)666'
+kubectl -n infra apply -f manifests/installation/storage/etcd
+etcdctl --endpoints=127.0.0.1:30002  member list
+
+kubectl -n infra create secret generic mongo --from-literal=MONGO_INITDB_ROOT_USERNAME=root --from-literal=MONGO_INITDB_ROOT_PASSWORD='onex(#)666'
+kubectl -n infra apply -f manifests/installation/storage/mongo
 ```

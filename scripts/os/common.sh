@@ -61,7 +61,7 @@ EOF
 
 function neovim::setting() {
   git clone https://github.com/pachirode/Chadrc_Centos8_go.git $HOME/.config/nvim
-  tee $HOME/.bashrc <<'EOF'
+  tee -a $HOME/.bashrc <<'EOF'
   # fzf-lua
   export XDG_RUNTIME_DIR=/run/user/$(id -u)
 EOF

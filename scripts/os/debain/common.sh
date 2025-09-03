@@ -5,5 +5,6 @@ function install::common() {
     gcc g++ libc6-dev zlib1g-dev \
     git-lfs telnet lrzsz jq \
     libexpat1-dev libssl-dev \
-    fzf neovim git zsh
+    fzf neovim git zsh \
+    mariadb-client redis-tools
 }
