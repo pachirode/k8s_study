@@ -214,8 +214,40 @@ crictl pods
 上述命令首先登录到名为 `onex-worker3` 的 `Kubernetes Node` 中，接着获取所有节点
 
 网络访问路径为
+
 - 宿主机
-  - 先访问 `30000` 端口，宿主机的 `30000` 端口会将流量转发到 `Kubernetes Node` 容器中的 `30000` 端口
+    - 先访问 `30000` 端口，宿主机的 `30000` 端口会将流量转发到 `Kubernetes Node` 容器中的 `30000` 端口
 - `Node` 容器
-  - `30000` 端口收到流量，转发到 `Pod` 容器的 `3306` 端口
+    - `30000` 端口收到流量，转发到 `Pod` 容器的 `3306` 端口
 - `Pod` 容器
+
+### 中间件
+
+```yaml
+kubectl -n infra apply -f manifests/installation/middleware/jaeger
+telnet 127.0.0.1 30005
+
+kubectl -n infra apply -f manifests/installation/middleware/kafka
+telnet 127.0.0.1 30006
+```
+
+### `Ingress`
+
+从集群外访问集群内部的服务
+- 实现方案
+  - `Nginx`
+  - `Haproxy`
+  - `Traefik`
+
+```bash
+make tools.install.helm
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+helm install traefik traefik/traefik --version 26.0.0 --namespace kube-system -f manifests/installation/traefik/traefik-values.yaml
+kubectl -n kube-system get pods|grep traefik
+
+# 端口转发
+kubectl port-forward -n kube-system --address 0.0.0.0 $(kubectl get pods -n kube-system --selector "app.kubernetes.io/name=traefik" --output=name) 7000:9000
+# 访问
+http://127.0.0.1:7000/dashboard/ 
+```
