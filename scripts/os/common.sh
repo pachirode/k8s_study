@@ -60,8 +60,13 @@ EOF
 }
 
 function neovim::setting() {
+  curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+  sudo rm -rf /opt/nvim
+  sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
+
   git clone https://github.com/pachirode/Chadrc_Centos8_go.git $HOME/.config/nvim
   tee -a $HOME/.bashrc <<'EOF'
+  export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
   # fzf-lua
   export XDG_RUNTIME_DIR=/run/user/$(id -u)
 EOF
