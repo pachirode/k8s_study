@@ -1,0 +1,27 @@
+# 不推荐使用
+apiVersion: v1
+kind: ReplicationController # 副本控制器 RC
+metadata:
+  name: test-rc # RC名称，全局唯一
+  labels:
+    name: test-rc
+spec:
+  replicas: 2 # Pod副本期待数量
+  selector:
+    name: test-pod
+  template:
+    metadata:
+      labels:
+        name: test-pod
+    spec:
+      containers: # Pod 内容的定义部分
+        - name: test #容器的名称
+          image: long-xu/hello:1.0.0  #容器对应的 Docker Image
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env: # 注入到容器的环境变量
+            - name: env1
+              value: "k8s-env1"
+            - name: env2
+              value: "k8s-env2"
