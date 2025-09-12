@@ -44,7 +44,7 @@ function worker::nginx::work-config() {
   source environment.sh
   cd /opt/k8s/work
 
-  sudo tee kube-nginx.conf << \EOF
+  sudo tee kube-nginx.conf <<EOF
   worker_processes 1;
 
   events {

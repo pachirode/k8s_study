@@ -1,0 +1,10 @@
+[Unit]
+Description=The demo service that does nothing useful
+After=remote-fs.target nss-lookup.target
+
+[Service]
+ExecStart=/usr/bin/sha1sum /dev/zero
+ExecStop=/bin/kill -WINCH ${MAINPID}
+
+[Install]
+WantedBy=multi-user.target
