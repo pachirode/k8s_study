@@ -119,16 +119,16 @@
 ### `API`
 
 - `k8s.io/api`
-  - 包含内置资源对象的结构体定义，以及这些资源对象的操作和状态
-  - 操作
-    - 主要包括针对每种资源对象 `Marshal` `Unmarshal` 等
-  - 状态
-    - 涉及到资源的状态
-      - `XXXConditionType`
+    - 包含内置资源对象的结构体定义，以及这些资源对象的操作和状态
+    - 操作
+        - 主要包括针对每种资源对象 `Marshal` `Unmarshal` 等
+    - 状态
+        - 涉及到资源的状态
+            - `XXXConditionType`
 - `kubernetes/pkg/api`
-  - 核心资源对象 `util` 类型函数
+    - 核心资源对象 `util` 类型函数
 - `kubernetes/pkg/apis`
-  - 和 `k8s.io/api` 包内容相似，包含内置资源对象的结构体定义
+    - 和 `k8s.io/api` 包内容相似，包含内置资源对象的结构体定义
 
 ### 代码结构设计
 
@@ -138,3 +138,90 @@
 - `opts.Validate`
 - `NewConfig`
 - `config.Complete`
+
+# 架构
+
+### 原始阶段
+
+### 精简 `main` 文件
+
+将命令行参数设置，命令行程序构建，程序初始化等代码剥离出 `main` 文件，保证文件的简单性
+
+- `pkg/util`
+- `pkg/version/verflag`
+- `pkg/master/server`
+
+### 应用代码分离
+
+`cmd` 目录下新增 `app` 目录，将之前 `pkg/master/server` 实现的应用初始化，启动等核心代码迁移
+
+应用分层
+
+- `cmd/kube-apiserver`
+- `cmd/kube-apiserver/app`
+    - 应用层，负责应用命令行参数是的设置，应用初始化和启动等
+- `pkg/master`
+    - 业务层
+
+### 命令行参数剥离
+
+剥离命令行参数到 `cmd/xxx/app/options`，代码按照不同的功能存放到不同文件中 `validation.go` 存放验证相关方法
+引入动态配置功能
+
+- `XXXOptions struct`
+    - 命令行选项的从操作对象
+- `NewXXXOptions`
+    - 创建一个带默认值的 `XXXOptions` 实例
+- `AddFlags`
+    - 在该方法中设置命令行参数，并将命令行参数的值绑定到结构体字段值中
+
+动态配置
+`K8S` 的各个组件在 `v1.2.0` 之前都是通过命令行参数进行配置的
+这种方式在命令行参数不多的情况下问题不大，一旦参数过多就会变的难以阅读
+
+- 命令行参数过多，启动命令太长
+- 命令行参数过多，管理成本会大于配置文件
+
+`kubelet` 组件是部署在每一个 `Node` 节点上的，更新配置的时候往往需要管理员先通过 `SSH`
+登录到节点，修改配置再重新启动 `kubelet` 组件，需要很高的维护成本
+因此使用配置中心的机制，通过配置中心，触发配置文件的变更和 `kubelet` 组件的重启
+
+- 引入第三方配置中心组件
+    - `Apollo`
+    - `Etcd`
+- 复用 `K8S` 机制
+    - 增加一个配置类型的 `API` 资源，并 `Watch kube-apiserver`
+
+```yaml
+apiVersion: kubelet.config.k8s.io/v1alpha1
+kind: KubeletConfiguration
+```
+
+配置项会保存在 `ConfigMap` 资源的 `data` 字段中，`kubelet` 会 `watch ConfigMap`，当 `ConfigMap` 有变化时，`kubelet`
+会将 `ConfigMap data` 中的字段中的配置项写到本地磁盘，然后退出进程，操作系统级别的进程管理服务自动重新拉起 `kubelet`
+
+### 应用构建框架化
+
+使用 `cobra` 框架来构建并启动应用
+
+# 应用构建模型
+
+应用三大基本功能，将其拆分出来，可以提高服务的稳定性和可维护性
+
+- 应用框架构建
+    - 命令行程序
+    - 命令行参数解析
+        - `cmd/kube-xxx/app/options`
+            - `cmd/kube-xxx/app/options/options.go`
+            - `cmd/kube-xxx/app/options/completion.go`
+    - 配置文件解析
+- 应用初始化
+    - 服务初始化
+        - 应用框架的初始化命令
+        - 命令行参数的设置
+    - 业务初始化
+        - 业务相关代码初始化
+            - 数据库创建
+            - `API` 路由初始化
+            - 认证授权初始化
+- 服务启动
