@@ -30,3 +30,107 @@
 `kubectl api-resources |egrep 'k8s.io|batch| v1| apps| autoscaling| batch'` 查看支持的所有资源
 
 - 指定 `REST` 资源类型
+
+# 资源
+
+### `APIResource`
+
+代表一个[资源组](../../../demo/kube-apiserver/api_resource.go)
+
+`Categories` 指定资源所属的资源分组，如果此处指定 `all`，使用 `kubectl get all` 就可以看到创建的自定义资源
+
+### 资源类型 `Kind`
+
+某一种资源归属于某一种类型，通常情况下一个资源归属于一个资源类型，但是某个资源的子资源可能归属于不同的资源类型
+
+- `/api/v1/namespaces/default/deployment`
+- `/api/v1/namespaces/default/deployment/scale`
+
+资源分类
+
+- `Workloads`
+    - 工作负载，用来管理可以在集群节点上运行容器的资源对象
+    - `Pod`
+- `Discovery & LB`
+    - 服务发现和负载均衡，用来将工作负载组合成一个外部可访问的，负载均衡服务的资源对象
+    - `Service`
+- `Config & Storage`
+    - 配置和存储，用来注入初始化数据到应用程序中，并持久化存储容器外部的数据资源对象
+    - `ConfigMap`
+- `Cluster`
+    - 集群，定义集群的本身配置方式，这些资源类型通常只会被集群管理员使用
+    - `ResourceQuota`
+- `Metadata`
+    - 元数据，用来配置集群内其他资源行为的对象，用于扩展工作负载
+    - `HorizontalPodAutoscaler`
+
+### 资源组 `Group`
+
+方便统一管理和维护所有资源，根据资源功能特性，抽象出资源组的概念，每个资源都归属于一个逻辑资源组
+
+资源组类型
+
+- 拥有组名的资源组
+    - 请求 `/apis/<group>/<version>/<resource>`
+    - 访问自定义的 `API` 组，扩展 `K8S API`
+- 没有组名的资源组
+    - `/api/<version>/<resource>`
+    - 用来访问核心 `API` 组
+        - `v1` 版本核心 `API` 对象
+            - `Pod`
+            - `Service`
+
+资源和资源组在默认情况下被启用，通过给 `kube-apiserver` 设置 `--runtime-confi` 参数来启用或者禁用
+参数为 `<key>[=<value>]` 如果省略值则为 `true`
+修改资源或者资源组时，需要重启 `kube-apiserver` 和 `controller` 使得修改生效
+
+### 资源版本 `Version`
+
+表示 `API` 的资源版本，用于标识 `API` 资源的演变，采用了语义化版本规范
+
+资源版本控制
+
+- `Alpha`
+    - `v1alpha1`
+    - 默认被禁止，必须在 `kube-apiserver` 配置中显式启用
+    - 新特性，会出现问题
+    - 随时会被删除
+- `Beta`
+    - 新版本默认被禁止，需要显式启用
+    - 可以被使用，功能将长期维护但是后续版本可以需要迁移
+- `Stable`
+    - 默认启用
+
+资源版本分类
+
+版本转换时，所有的具名版本会先转换为内部版本，内部版本再转换为其他具名版本
+创建 `K8S` 资源时，必须指定一个资源版本，内部版本不对外暴露
+
+- 内部版本
+- 外部版本
+
+### 根据 `Group Version Kind` 构建 `REST`
+
+```bash
+kubectl apply -f deployment.yaml --dry-run=client -o json > deployment.json
+kubectl create --raw /apis/apps/v1/namespaces/default/deployments -f deployment.json
+```
+
+创建资源时，指定了 `URL`，如果不指定配置文件中已经指明 `apiVersion` `kind` 字段
+
+- `Group`
+    - `apps`
+- `Version`
+    - `v1`
+- `Kind`
+    - `deployment`
+
+- `GV`
+    - 资源组和版本，主要区分不同组和版本
+- `GVK`
+    - 资源组，版本和类型，唯一标识和定位一个具体的资源
+        - `apps/v1/Deployment`
+- `GVR`
+    - 资源组，版本和资源名称，资源 `URL` 路径
+
+# 支持 `HTTP` 接口

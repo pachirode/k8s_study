@@ -69,8 +69,16 @@ type GroupVersionKind struct {
 ##### 实现对象
 
 - 定义资源对象内嵌 `metav1.TypeMeta`
+  - 实现 `GetObjectKind()`
 - 结构体前面添加注释
-  - ``
+  - `// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object` 使用代码生成器，生成深度拷贝方法
+
+##### 接口实现 `metav1.ObjectMeta`
+
+资源的元数据，所有的资源对象都具有统一的元数据（资源 `List` 除外）
+
+###### `meta.Accessor`
+从 `runtime.Object` 类型获取 `metav1.Object` 接口对象
 
 
 
