@@ -134,3 +134,54 @@ kubectl create --raw /apis/apps/v1/namespaces/default/deployments -f deployment.
     - 资源组，版本和资源名称，资源 `URL` 路径
 
 # 支持 `HTTP` 接口
+
+[路由构建](./路由构建.md)
+
+### 客户端 `HTTP` 路由
+
+通过 `SDK` 来访问 `kube-apiserver`，是由 `client-gen` 工具自动生成的，可以指定需要给资源生成的 `API` 操作
+
+### 服务端 `HTTP` 路由
+
+服务端的 `HTTP` 路由是由 `kube-apiserver` 在启动时，用静态代码的方式添加
+
+```bash
+actions = appendIf(actions, action{"LIST", resourcePath, resourceParams, namer, false}, isLister)
+```
+
+### 路由处理
+
+[路由处理](./路由处理.md)
+
+### 创建 REST Storage
+
+`storage := map[string]rest.Storage{}` 保存每个资源的 `Storage`，其中 `key` 为资源名称
+然后将资源保存到 `VersionedResourcesStorageMap` 中，最外层的 `key` 是资源版本
+
+# 参数校验
+
+- `createHandler` 函数是真正的请求处理函数
+    - `r rest.NamedCreater`
+        - 前面步骤生成的 `REST` 里面 `CreateStrategy` 字段包含了 `Validate` 方法用于进行参数的校验
+    - `scope *RequestScope`
+        - 封装 `RESTful` 中常见的处理方法
+    - `admit admission.Interface`
+        - `Kubernetes Admission Controller` 链，包含多个 `Admission Webhook` 插件，执行时会按照初始化顺序先后执行这些插件
+- `CreateOptions`
+    - 校验 `CreateOptions`，检验请求参数是否合法
+- ***需要修改的部分***
+    - 校验资源 `ObjectMeta.ManagedFields` 是否合法
+    - 资源校验策略，可以执行自定义校验逻辑
+    - 校验资源 `ObjectMeta` 字段是否合法
+    - 执行 `Validating Webhook` 校验资源
+
+# 设置默认值
+
+- 设置默认值时间
+  - 到达路由函数前
+    - `k8s` 主要采用的方式，类似中间件的使用 
+  - 参数验证过程中
+  - 业务层处理
+
+`k8s` 只会给版本化的 `API` 设置默认值，内部的 `API` 是不会设置默认值
+

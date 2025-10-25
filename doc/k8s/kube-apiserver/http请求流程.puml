@@ -1,0 +1,21 @@
+@startuml
+start
+:HTTP Request;
+:路由匹配;
+:Authentication;
+:Authorization;
+:Mutating Admission;
+:Versioning;
+
+partition "Strategy" {
+  :PrepareForCreate;
+  :Validate;
+  :WarningsOnCreate;
+  :Canonicalize;
+}
+
+:Validating Admission;
+:REST Method;
+:ETCD;
+stop
+@enduml
