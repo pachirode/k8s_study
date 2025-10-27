@@ -1,0 +1,7 @@
+FROM debian
+LABEL maintainer="pachirode"
+RUN http_proxy=http://192.168.1.4:7890 https_proxy=http://192.168.1.4:7890 \
+    apt-get update && \
+    apt-get install -y stress && \
+    rm -rf /var/lib/apt/lists/*
+ENTRYPOINT ["stress", "-c", "2", "-v", "-t", "10m"]
