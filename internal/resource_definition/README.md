@@ -1,14 +1,16 @@
 使用自定义资源
 
 运行生成器生成代码
+
 - `deepcopy-gen`
-  - 为每一个结构体生成 `DeepCopyObject()` 方法，这个是实现 `runtime.Object` 接口
+    - 为每一个结构体生成 `DeepCopyObject()` 方法，这个是实现 `runtime.Object` 接口
 - `client-gen`
-  - 为资源创建 `clientset`
+    - 为资源创建 `clientset`
 
 ### deepcopy-gen
 
 ##### 安装
+
 ```bash
 go install k8s.io/code-generator/cmd/deepcopy-gen
 ```
@@ -18,13 +20,13 @@ go install k8s.io/code-generator/cmd/deepcopy-gen
 需要添加注解生成器才能正常工作
 
 - `// +k8s:deepcopy-gen=package`
-  - 注释在包级别上
-  - 要求为包的所有结构体生成 `deepcopy` 方法
-  - 一般写在 `doc.go` 文件中
+    - 注释在包级别上
+    - 要求为包的所有结构体生成 `deepcopy` 方法
+    - 一般写在 `doc.go` 文件中
 - `// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object`
-  - 写在每种类结构体之前
-  - 默认情况下生成深拷贝只有 `DeepCopy()` 和 `DeepCopyInto()`
-  - 此注释生成 `DeepCopyObject()`
+    - 写在每种类结构体之前
+    - 默认情况下生成深拷贝只有 `DeepCopy()` 和 `DeepCopyInto()`
+    - 此注释生成 `DeepCopyObject()`
 
 ##### 准备文件
 
@@ -47,15 +49,15 @@ go install k8s.io/code-generator/cmd/client-gen
 ##### 注解
 
 - `// +genclient`
-  - 为一个有命名空间的资源生成 `Clientset`
+    - 为一个有命名空间的资源生成 `Clientset`
 - `// +genclient:nonNamespaced`
-  - 为没有命名空间的资源生成 `Clientset`
+    - 为没有命名空间的资源生成 `Clientset`
 - `+genclient:onlyVerbs=create,get`
-  - 只生成这些动词，而不是默认生成所有
+    - 只生成这些动词，而不是默认生成所有
 - `+genclient:skipVerbs=watch`
-  - 排除这些生成其他所有
+    - 排除这些生成其他所有
 - `+genclient:noStatus`
-  - 如果结构体中存在 `status` 不再生成 `updateStatus`
+    - 如果结构体中存在 `status` 不再生成 `updateStatus`
 
 ##### AddToScheme 函数
 
@@ -69,19 +71,68 @@ client-gen -v 10 --go-header-file ./header.go.txt --output-dir ./generated/clien
 ```
 
 - `-v 10`
-  - 日志级别，数值越高，输出的日志越详细
+    - 日志级别，数值越高，输出的日志越详细
 - `--go-header-file`
-  - 指定文件头，添加到生成的每个文件顶部
+    - 指定文件头，添加到生成的每个文件顶部
 - `--output-dir`
-  - 指定生成代码的输出目录
+    - 指定生成代码的输出目录
 - `--output-pkg`
-  - 生成代码包的名称
+    - 生成代码包的名称
 - `--clientset-name=versioned`
-  - 指定生成的客户端集的名称
-  - 封装 `API` 资源的访问
+    - 指定生成的客户端集的名称
+    - 封装 `API` 资源的访问
 - `--input-base=`
-  - 设置输出基本路径
-  - 不设置默认使用当前工作目录作为基础路径
-  - 一般留空，表示从输入路径开始
+    - 设置输出基本路径
+    - 不设置默认使用当前工作目录作为基础路径
+    - 一般留空，表示从输入路径开始
 - `--input $PWD/apps/v1beta1`
-  - 指定生成客户端代码的 `API` 资源目录
+    - 指定生成客户端代码的 `API` 资源目录
+
+### defaulter-gen
+
+自动创建默认值
+
+```bash
+go install k8s.io/code-generator/cmd/defaulter-gen
+```
+
+##### 注解
+
+- `// +k8s:defaulter-gen=TypeMeta`
+    - 为所在的包的资源定义生成默认值函数
+    - 为所有包含 `TypeMeta` `ObjectMeta` 的结构体设置默认值函数
+- `// +k8s:defaulter-gen=true`
+    - 为所有结构体生成
+
+##### 命令
+
+```bash
+defaulter-gen -v 1 --go-header-file ./header.go.txt --output-file zz_generated.defaults.go ./v1beta1/
+```
+
+### conversion-gen
+
+生成版本转换函数
+
+```bash
+go install k8s.io/code-generator/cmd/conversion-gen
+```
+
+##### 注解
+
+- `// +k8s:conversion-gen=XXX`
+  - 判断是否需要为所在包的资源生成版本转换函数
+  - 在指定的包下面扫描所有类型，为它们和另一个版本包之间自动生成 `Convert<Internal>To<Extenal>` 深拷贝转换函数
+- `// +k8s:conversion-gen-external-types`
+  - 指定外部类型的包，如果不指定说明外部类型就在当前包中
+
+##### 命令
+
+```bash
+conversion-gen -v 1 --go-header-file ./header.go.txt --output-file zz_generated.conversion.go ./v1beta1/
+```
+
+##### 自定义转换函数
+
+转换函数命名规则，`Convert_<源版本包名>_<资源类型>_To_<目标版本包名>_<资源类型>`
+自定义转换函数，根据转换函数名，新建一个 `conversion.go`，工具生成转换代码时，会自动忽略已经存在的转换函数
