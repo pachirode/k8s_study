@@ -39,10 +39,6 @@ function docker::images() {
     }
 }
 EOF
-#    添加本地私有仓库，内网访问使用 http 协议
-#    "insecure-registries": [
-#        "192.168.1.6"
-#    ]
 
   sudo mkdir -p /etc/systemd/system/docker.service.d
   sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf <<EOF
