@@ -1,0 +1,15 @@
+@startuml
+rectangle "k8s 控制器" as controller {
+    rectangle "Informer" as informer
+    queue "RateLimiting Queue" as rate
+    rectangle "runWorker" as worker
+    rectangle "syncHandler" as sync
+}
+
+rectangle "kube-apiserver" as api
+informer -left-> api: list + watch
+sync -left-> api: 更新状态
+informer -right-> rate
+rate -right-> worker
+worker -down-> sync: 执行资源调谐函数
+@enduml
