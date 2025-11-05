@@ -1,0 +1,55 @@
+`k8s` 改造很多核心功能特性，将这些功能变得可扩展，可以根据插件规范，开发自己的插件
+
+### 扩展点
+
+- [横向](./横向.md)
+    - `Config File`
+        - 使用配置文件替代 `flag` 参数
+- [客户端](./客户端.md)
+    - `kubectl plugin`
+        - `kubectl` 扩展插件，提供额外的功能或者命令，可以自定义插件来简化命令
+    - `client-go credential plugin`
+        - 用于管理 `k8s` 客户端身份凭据的组件，支持外部配置
+- [`API`](api.md)
+    - `Extended APIServer`
+        - 自定义资源，允许用户通过定义新的资源类型，创建自定义 `API`
+    - `Aggregated APIServer`
+        - `kube-apiserver` 支持的一种 `APIServer` 类型，允许开发一个新的 `web` 服务，将其注册到路由中一次来访问自定义服务
+    - `External Metrics`
+        - 自定义监控指标
+    - `Webhook`
+        - `Authentication Webhook`
+            - 通过调用 `Webhook` 身份认证
+        - `Authorization Webhook`
+            - 类似上面，但是将授权决策委派给外部服务
+        - `Dynamic admission control Webhook`
+            - 动态准入控制，创建或者更新请求，允许验证或者修改资源，通过外部服务影响请求
+    - `Initializers`
+        - 弃用，动态准入控制替代
+    - `Annotations`
+        - 注解，键值对形式存储 `k8s` 对象中的元数据，通常存储非表示性的信息
+- [控制面](./控制面.md)
+    - 自定义控制器
+        - 对资源进行调和
+    - `CPI`
+        - 云厂商
+    - 调度器扩展
+        - 允许开发者实现各类 `Pod` 调度逻辑
+    - `KMS`
+        - 密钥管理服务，用于加密敏感信息
+- [基础设施层](./基础设施层.md)
+    - `CNI`
+        - 容器网络接口，允许自定义网络实现
+    - `CSI`
+        - 容器存储接口
+    - `CRI`
+        - 容器运行时接口
+    - `Extended Resource`
+        - 扩展资源
+        - 不是由 `k8s` 直接管理的自定义资源
+    - `Device Plugin`
+        - 设备插件
+        - 注册和监控设备资源
+    - `Virtual Kubelet`
+        - 可以定义部署的期望位置和期望形态
+    - > `Device Plugin` 提供特定的设备资源，`Extended Resources` 管理；两者需要配合使用

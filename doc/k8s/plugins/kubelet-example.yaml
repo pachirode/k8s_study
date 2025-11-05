@@ -1,0 +1,21 @@
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: cgroupfs
+cgroupRoot: /
+
+podCIDR: "10.100.0.0/24"
+
+volumeStatsAggPeriod: 10s
+
+fileCheckFrequency: 10s
+
+evictionPressureTransitionPeriod: 30s
+evictionHard:
+  memory.available: 250Mi
+  nodefs.available: 10%
+  nodefs.inodesFree: 5%
+evictionMinimumReclaim:
+  nodefs.available: 5%
+  nodefs.inodesFree: 5%
+
+serializeImagePulls: false

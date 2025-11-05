@@ -8,3 +8,11 @@ function install::common() {
     fzf neovim git zsh \
     mariadb-client redis-tools
 }
+
+function install::neovim() {
+  url = $(curl -s https://api.github.com/repos/neovim/neovim/releases/latest | jq -r '.assets[] | select(.name | test("linux-x86_64.tar")) | .browser_download_url')
+  curl -L -o nvim-x86_64.tar.gz "$url"
+  tar -zxvf nvim-x86_64.tar.gz
+
+  sudo apt install make gcc ripgrep unzip git xclip curl
+}
