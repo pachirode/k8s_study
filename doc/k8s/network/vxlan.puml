@@ -1,0 +1,57 @@
+@startuml
+skinparam rectangleStyle rounded
+skinparam defaultFontSize 12
+skinparam shadowing false
+
+title VXLAN Overlay Structure (flannel.1)
+
+rectangle "Node 1\n10.168.0.2/24" as N1 {
+    rectangle "eth0" as N1_eth0
+    rectangle "flannel.1\n10.1.15.0/32\n(VTEP)" as N1_flannel
+    rectangle "docker0\n10.1.15.1/24" as N1_docker
+
+    rectangle "container-1\n10.1.15.2" as N1_c1
+    rectangle "container-...\n10.1.15.x" as N1_cx
+
+    N1_c1 --> N1_docker
+    N1_cx --> N1_docker
+    N1_docker --> N1_flannel
+    N1_flannel --> N1_eth0
+
+    rectangle "Inner Headers" as N1_inner {
+        rectangle "Inner Ethernet Header" as IE1
+        rectangle "Inner IP Header" as II1
+    }
+}
+
+rectangle "Node 2\n10.168.0.3/24" as N2 {
+    rectangle "eth0" as N2_eth0
+    rectangle "flannel.1\n10.1.16.0/32\n(VTEP)" as N2_flannel
+    rectangle "docker0\n10.1.16.1/24" as N2_docker
+
+    rectangle "container-...\n10.1.16.x" as N2_cx
+    rectangle "container-2\n10.1.16.3" as N2_c2
+
+    N2_cx --> N2_docker
+    N2_c2 --> N2_docker
+    N2_docker --> N2_flannel
+    N2_flannel --> N2_eth0
+
+    rectangle "Inner Headers" as N2_inner {
+        rectangle "Inner Ethernet Header" as IE2
+        rectangle "Inner IP Header" as II2
+    }
+}
+
+N1_eth0 -[#green]-> N2_eth0 : Overlay Packet\n(Outer Headers)
+
+rectangle "Overlay Packet Encapsulation" as Overlay {
+    rectangle "Outer Ethernet Header" as OE
+    rectangle "Outer IP Header" as OI
+    rectangle "Outer UDP Header" as OU
+    rectangle "VXLAN Header" as VXH
+    rectangle "Inner Ethernet Header" as IE
+    rectangle "Inner IP Header" as II
+}
+
+@enduml

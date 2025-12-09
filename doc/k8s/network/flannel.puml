@@ -1,0 +1,46 @@
+@startuml
+skinparam rectangleStyle rounded
+skinparam defaultFontSize 12
+
+title Flannel Overlay Traffic Flow (UDP VXLAN-like Encapsulation)
+
+rectangle "Node 1\n10.168.0.2/24" as N1 {
+    rectangle "eth0" as N1_eth0
+    rectangle "flanneld :8285\nUDP Encapsulation" as N1_flanneld
+    rectangle "flannel0\n100.96.1.0/16" as N1_flannel0
+    rectangle "docker0\n100.96.1.1/24" as N1_docker0
+
+    rectangle "container-1\n100.96.1.2" as c1
+    rectangle "container-...\n100.96.1.x" as c1x
+
+    c1 --> N1_docker0
+    c1x --> N1_docker0
+    N1_docker0 --> N1_flannel0
+    N1_flannel0 --> N1_flanneld
+    N1_flanneld --> N1_eth0
+
+}
+
+rectangle "Node 2\n10.168.0.3/24" as N2 {
+    rectangle "eth0" as N2_eth0
+    rectangle "flanneld :8285\nUDP Decapsulation" as N2_flanneld
+    rectangle "flannel0\n100.96.2.0/16" as N2_flannel0
+    rectangle "docker0\n100.96.2.1/24" as N2_docker0
+
+    rectangle "container-...\n100.96.2.x" as c2x
+    rectangle "container-2\n100.96.2.3" as c2
+
+    c2x --> N2_docker0
+    c2 --> N2_docker0
+    N2_docker0 --> N2_flannel0
+    N2_flannel0 --> N2_flanneld
+    N2_flanneld --> N2_eth0
+}
+
+N1_eth0 -[#green]-> N2_eth0 : Outer Packet\nsrc:10.168.0.2\ndst:10.168.0.3\ndport:8285 (UDP)
+
+rectangle "Inner Packet\nsrc:100.96.1.2\ndst:100.96.2.3" as Inner
+
+N1_docker0 -[#blue]-> N2_docker0 : Encapsulated payload\n(Inner Packet)
+
+@enduml
