@@ -120,5 +120,17 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 
 ##### 数组及拆包
 
+# host-gw
 
+选择 `flannel` 使用模式之后，宿主机会创建一条规则
 
+```bash
+# 所有属于目标网段的 IP 包，会经过本机 eth0 设备发出，并且下一跳地址为 10.168.0.3
+10.244.1.0/24 via 10.168.0.3 dev eth0
+```
+
+该模式的工作原理就是将每个子网的下一跳，设置成子网的宿主机 `IP`，宿主机充当了容器通信线路里面的网关角色
+`flannel` 只需要 `Watch` 这些数据，然后实时更新路由表即可
+> 这种模式可以避免封包解包
+
+[calico](./calico.md)

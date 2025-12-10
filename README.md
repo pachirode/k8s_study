@@ -1,9 +1,10 @@
 # K8S 学习笔记
 
 主要参考:
-https://github.com/onexstack/kubernetes-examples
-https://www.lixueduan.com/categories/kubernetes
 
+https://github.com/onexstack/kubernetes-examples
+
+https://www.lixueduan.com/categories/kubernetes
 
 # 创建集群
 
@@ -14,3 +15,10 @@ https://www.lixueduan.com/categories/kubernetes
 # 网络
 
 ### [flannel](doc/k8s/network/flannel.md)
+
+# [Service](doc/k8s/service/service.md)
+
+# 故障排除
+
+[service](doc/k8s/debug/service/service.md)
+

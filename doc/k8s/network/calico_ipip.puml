@@ -1,0 +1,69 @@
+@startuml
+skinparam rectangleStyle rounded
+skinparam shadowing false
+skinparam defaultFontSize 12
+
+title Calico IPIP (tunl0) + BGP + VLAN Routing Structure
+
+rectangle "Router 1\n192.168.1.1" as R1 #A6B742 {
+}
+rectangle "Router 2\n192.168.2.1" as R2 #A6B742 {
+}
+
+R1 -[bold]-> R2 : L3 Routing
+
+rectangle "VLAN 192.168.1.0/24" as VLAN1 {
+    rectangle "Node 1\n192.168.1.2" as N1 {
+
+        rectangle "eth0" as N1_eth0 #4FC3F7
+
+        rectangle "BGP Client" as N1_bgp #F4A742
+        rectangle "Felix" as N1_felix #F4A742
+
+        rectangle "tunl0" as N1_tunl #A6B742
+
+        N1_eth0 <-[#red]- N1_tunl
+        R1 -[#red]-> N1_eth0
+
+        rectangle "Container 1\n10.233.1.2" as C1 #FF77AA
+        rectangle "Container 2\n10.233.1.3" as C2 #FF77AA
+
+        rectangle "cali9c02e56" as veth1 #FFFFFF
+        rectangle "calib4963f3" as veth2 #FFFFFF
+
+        C1 --> veth1 : eth0
+        veth1 -[#green]-> N1_tunl
+
+        C2 --> veth2 : eth0
+        veth2 -[#black]-> N1_tunl
+    }
+}
+
+rectangle "VLAN 192.168.2.0/24" as VLAN2{
+    rectangle "Node 2\n192.168.2.2" as N2 {
+
+        rectangle "eth0" as N2_eth0 #4FC3F7
+
+        rectangle "BGP Client" as N2_bgp #F4A742
+        rectangle "Felix" as N2_felix #F4A742
+
+        rectangle "tunl0" as N2_tunl #A6B742
+
+        N2_eth0 <-[#red]- N2_tunl
+        R2 -[#red]-> N2_eth0
+
+        rectangle "Container 3\n10.233.2.2" as C3 #FF77AA
+        rectangle "Container 4\n10.233.2.3" as C4 #FF77AA
+
+        rectangle "cali8c01e76" as veth3 #FFFFFF
+        rectangle "calib5863f3" as veth4 #FFFFFF
+
+        C3 --> veth3 : eth0
+        veth3 -[#black]-> N2_tunl
+
+        C4 --> veth4 : eth0
+        veth4 -[#green]-> N2_tunl
+    }
+}
+
+@enduml

@@ -1,0 +1,62 @@
+@startuml
+skinparam rectangleStyle rounded
+skinparam shadowing false
+skinparam defaultFontSize 12
+
+title Calico BGP + Felix + veth Routing
+
+rectangle "Node 1\n192.168.1.2" as N1 {
+
+    rectangle "eth0" as N1_eth0 #ADD8E6
+
+    rectangle "BGP Client" as N1_bgp #F4A742
+    rectangle "Felix" as N1_felix #F4A742
+
+    rectangle "routes" as N1_routes {
+    }
+
+    rectangle "Container 1\n10.233.1.2" as C1 #FF77AA
+    rectangle "Container 2\n10.233.1.3" as C2 #FF77AA
+
+    rectangle "cali9c02e56" as veth1 #FFFFFF
+    rectangle "calib4963f3" as veth2 #FFFFFF
+
+    C1 --> veth1 : eth0
+    veth1 --> N1_routes
+    C2 --> veth2 : eth0
+    veth2 --> N1_routes
+
+    N1_routes --> N1_eth0
+    N1_bgp --> N1_routes
+    N1_felix --> N1_routes
+}
+
+rectangle "Node 2\n192.168.1.3" as N2 {
+
+    rectangle "eth0" as N2_eth0 #ADD8E6
+
+    rectangle "BGP Client" as N2_bgp #F4A742
+    rectangle "Felix" as N2_felix #F4A742
+
+    rectangle "routes" as N2_routes {
+    }
+
+    rectangle "Container 3\n10.233.2.2" as C3 #FF77AA
+    rectangle "Container 4\n10.233.2.3" as C4 #FF77AA
+
+    rectangle "cali8c01e76" as veth3 #FFFFFF
+    rectangle "calib5863f3" as veth4 #FFFFFF
+
+    C3 --> veth3 : eth0
+    veth3 --> N2_routes
+    C4 --> veth4 : eth0
+    veth4 --> N2_routes
+
+    N2_routes --> N2_eth0
+    N2_bgp --> N2_routes
+    N2_felix --> N2_routes
+}
+
+N1_eth0 -[#green,bold]-> N2_eth0 : Cross-node routing\n(BGP distributed routes)
+
+@enduml
