@@ -16,7 +16,19 @@ https://www.lixueduan.com/categories/kubernetes
 
 ### [flannel](doc/k8s/network/flannel.md)
 
-# [Service](doc/k8s/service/service.md)
+# 对象
+
+[Service](doc/k8s/service/service.md)
+
+[Pod](doc/k8s/pod/pod.md)
+
+[Deployment](doc/k8s/deployment/deployment.md)
+
+# Volume
+
+[volume](doc/k8s/volume/volume.md)
+
+[project volume](doc/k8s/volume/project-volume.md)
 
 # 故障排除
 

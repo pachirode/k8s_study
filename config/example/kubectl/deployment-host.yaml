@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hostnames
+spec:
+  selector: # 被选中的 Pod，被称为 Service 的 Endpoints
+    matchLabels:
+      app: hostnames
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: hostnames
+    spec:
+      containers:
+      - name: hostnames
+        image: k8s.gcr.io/serve_hostname  # 访问目标端口，返回自己的 hostname
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9376
+          protocol: TCP

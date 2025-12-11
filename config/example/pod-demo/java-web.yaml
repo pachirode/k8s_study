@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: javaweb-2
+spec:
+  initContainers:
+    - name: war
+      image: busybox:1.36
+      command: [ "sh", "-c", "cp /sample.war /app" ]
+      volumeMounts:
+        - name: app-volume
+          mountPath: /app
+
+  containers:
+    - name: tomcat
+      image: tomcat:9.0
+      command: [ "sh","-c","catalina.sh run" ]
+      volumeMounts:
+        - mountPath: /usr/local/tomcat/webapps
+          name: app-volume
+      ports:
+        - containerPort: 8080
+          hostPort: 8001
+
+  volumes:
+    - name: app-volume
+      emptyDir: { }

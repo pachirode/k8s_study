@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-configmap
+  namespace: default
+data:
+  test: "test-configmap"
+  name: "name"
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-cm
+data:
+  log_level: "INFO"

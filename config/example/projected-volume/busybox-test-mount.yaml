@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - image: busybox
+    imagePullPolicy: IfNotPresent
+    name: app
+    volumeMounts:
+    - mountPath: /etc/foo
+      name: foo
+      readOnly: true
+    args:
+    - /bin/sh
+    - -c
+    - sleep 10; touch /tmp/healthy; sleep 30000
+  volumes:
+  - name: foo
+    configMap:
+      name: test-configmap

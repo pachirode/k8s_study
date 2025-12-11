@@ -1,0 +1,43 @@
+@startuml
+skinparam shadowing false
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam defaultTextAlignment center
+
+title CSI VolumeAttachment 流程
+
+' ==== 定义节点 ====
+rectangle user
+
+rectangle apiserver
+
+rectangle AttachDetachController
+
+rectangle "external-attacher" as ext
+
+rectangle "CSI Plugin" as csi {
+}
+
+rectangle kubelet
+
+' ==== 连线 ====
+
+user --> apiserver : 1. create pod
+
+apiserver --> AttachDetachController : 2. watch pod
+
+AttachDetachController --> apiserver : 3. Attach\n(创建 VolumeAttachment)
+
+apiserver --> ext : 4. watch VolumeAttachment
+
+ext --> csi : 5. 调用\nControllerPublish
+
+apiserver --> kubelet : 6. watch pod
+
+kubelet --> csi : Pod 调度到本节点\n执行 mount / unmount
+
+@enduml
+
+
