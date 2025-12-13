@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner-nfs-sc
+  labels:
+    app: nfs-client-provisioner-nfs-sc
+  namespace: kube-system
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner-nfs-sc
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner-nfs-sc
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/master
+                    operator: In
+                    values:
+                      - ""
+      containers:
+        - name: nfs-client-provisioner
+          image: caas4/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: k8s-sigs.io/nfs-subdir-external-provisioner-nfs-sc
+            - name: NFS_SERVER
+              value: 172.20.151.105
+            - name: NFS_PATH
+              value: /tmp/nfs/data
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 172.20.151.105
+            path: /tmp/nfs/data

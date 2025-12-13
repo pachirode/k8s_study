@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-memory
+data:
+  start.sh: |
+    #!/bin/sh
+    mkdir /tmp/test
+    mount -t tmpfs -o size=90M tmpfs /tmp/test/
+    dd if=/dev/zero of=/tmp/test/bigfile.log
+    sleep 60
+    rm /tmp/test/bigfile.log
+    umount /tmp/test
+    rm -rf /tmp/test
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-memory
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      apps: test-men
+  template:
+    metadata:
+      labels:
+        apps: test-men
+    spec:
+      volumes:
+        - name: data
+          configMap:
+            name: cm-memory
+      containers:
+        - name: c1
+          image: busybox
+          command: ["/bin/sh", "/data/start.sh"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: 100Mi
+              cpu: 100m
+          securityContext:
+            privileged: true
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: web
+
+---
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-memory
+spec:
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 60
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: deploy-memory

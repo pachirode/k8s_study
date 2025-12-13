@@ -1,0 +1,60 @@
+@startuml
+skinparam shadowing false
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam defaultTextAlignment center
+
+title PVC / PV / StorageClass / Pod 流程示意图
+
+' ==== Pod 层 ====
+rectangle "Kubernetes Pod" as pod {
+  rectangle "Container 1"
+  rectangle "Container 2"
+  rectangle "Container N"
+}
+
+' ==== PVC 层 ====
+rectangle "PVC:RBD" as pvc_rbd
+rectangle "PVC:iSCSI" as pvc_iscsi
+rectangle "PVC:NFS" as pvc_nfs
+
+' ==== PV 层 ====
+rectangle "PV(RBD)" as pv_rbd
+rectangle "PV(iSCSI)" as pv_iscsi
+
+' ==== StorageClass 层 ====
+hexagon "StorageClass RBD" as sc_rbd
+hexagon "StorageClass iSCSI" as sc_iscsi
+hexagon "StorageClass ..." as sc_other
+
+' ==== Provisioner ====
+rectangle "Provisioner" as prov_rbd
+rectangle "Provisioner " as prov_iscsi
+
+' ==== 步骤连线 ====
+
+' 创建 PVC
+pod --> pvc_rbd: 1. yaml\nConfig
+pod --> pvc_iscsi: 1. yaml\nConfig
+
+' 匹配 StorageClass
+pvc_rbd --> sc_rbd : 2. Match
+pvc_iscsi --> sc_iscsi : 2. Match
+
+' 动态 Provision PV
+sc_rbd --> prov_rbd : 3. Provisioning
+prov_rbd --> pv_rbd
+sc_iscsi --> prov_iscsi : 3. Provisioning
+prov_iscsi --> pv_iscsi
+
+' Bind PVC
+pv_rbd --> pvc_rbd : 4. Bind
+pv_iscsi --> pvc_iscsi : 4. Bind
+
+' Pod 使用 PV
+pod --> pv_rbd : 5. Use
+pod --> pv_iscsi : 5. Use
+
+@enduml

@@ -31,3 +31,52 @@
 将硬盘格式化并挂载到宿主机目录
 
 ##### CRI 将 Volume 挂载到 Pod
+
+### 概念
+
+- `PV`
+  - 持久化存储卷
+- `PVC`
+  - `PV` 使用请求
+- `StorageClass`
+  - `PV` 创建模板
+
+[hostpath](../../../config/example/volume/hostpath.yaml)
+[ceph](../../../config/example/volume/ceph.yaml)
+
+### 使用
+
+##### PV
+
+[demo](../../../config/example/volume/pv.yaml)
+
+需要专业的存储知识，一般由运维人员负责
+
+##### PVC
+
+[demo](../../../config/example/volume/pvc.yaml)
+
+只需要指定访问模式和空间大小
+
+##### StorageClass
+
+关联 `PV` 和 `PVC`，只有 `StorageClass` 相同才会才会被绑定到一起
+也可以作为 `PV` 模板，实现动态创建 `PV`
+
+`Dynamic Provisioning` 机制，根据 `PVC` 和 `StorageClass` 自动创建 `PV`
+
+### 流程
+
+##### 创建 `StorageClass` 和 `provisioner`
+
+[storageClass](../../../config/example/volume/storage.yaml)
+
+[provisioner](../../../config/example/volume/provisioner.yaml)
+
+##### 创建 PV
+
+[pv](../../../config/example/volume/pv-storage.yaml)
+
+需要保证 `storageClassName` 和前面的 `StorageClass` 对应
+`PersistentVolumeController` 会根据 `PVC` 寻找对应的 `PV` 进行绑定
+`provisioner` 会监视 `PVC`，根据 `StorageClass` 找到对应 `provisioner` 进行处理，创建对应的 `PV`

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-stress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stress
+  template:
+    metadata:
+      labels:
+        app: stress
+    spec:
+      containers:
+        - image: jasonyin2020/oldboyedu-linux-tools:v0.1
+          name: oldboyedu-linux-tools
+          imagePullPolicy: IfNotPresent
+          args:
+            - tail
+            - -f
+            - /etc/hosts
+          resources:
+            requests:
+              cpu: 0.2
+              memory: 300Mi
+            limits:
+              cpu: 0.5
+              memory: 500Mi
+
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: stress-hpa
+spec:
+  maxReplicas: 5
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: deploy-stress
+  targetCPUUtilizationPercentage: 95

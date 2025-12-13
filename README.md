@@ -6,6 +6,8 @@ https://github.com/onexstack/kubernetes-examples
 
 https://www.lixueduan.com/categories/kubernetes
 
+https://www.cnblogs.com/yinzhengjie/tag/Kubernetes/default.html
+
 # 创建集群
 
 [集群部署](doc/k8s/集群部署.md)
@@ -29,6 +31,16 @@ https://www.lixueduan.com/categories/kubernetes
 [volume](doc/k8s/volume/volume.md)
 
 [project volume](doc/k8s/volume/project-volume.md)
+
+# 自动扩缩容
+
+[VPA](doc/k8s/vpa_hpa/vpa.md)
+
+[HPA](doc/k8s/vpa_hpa/hpa.md)
+
+# plugin
+
+[metrics-server](doc/k8s/plugins/metrics-server.md)
 
 # 故障排除
 
