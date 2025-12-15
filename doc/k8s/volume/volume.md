@@ -6,12 +6,12 @@
 ### 挂载
 
 - 远程存储挂载到宿主机，只有远程存储才会执行，对应 `PV api`
-  - `Attach`
-    - 由控制器执行，将远程磁盘挂载到宿主机
-  - `Mount`
-    - 由 `kubectl` 远程磁盘格式化并挂载到 `Volume` 对应的宿主机目录 `/var/lib/kubelet`
+    - `Attach`
+        - 由控制器执行，将远程磁盘挂载到宿主机
+    - `Mount`
+        - 由 `kubectl` 远程磁盘格式化并挂载到 `Volume` 对应的宿主机目录 `/var/lib/kubelet`
 - 宿主机目录挂载到 `Pod`
-  - `CRI` 执行
+    - `CRI` 执行
 
 [流程](./flow.puml)
 
@@ -21,7 +21,8 @@
 
 `ADController` 不断检查 `Pod` 对应的 `PV` 和所在宿主机之间的挂载情况，从而决定 `Attach` 还是 `Dettach`
 
-`external-attacher` 检测到上一步创建的 `VolumeAttachment` 对象，如果 `CSI Plugin` 在同一个 `Pod`，调用接口进行 `Volume Attach`
+`external-attacher` 检测到上一步创建的 `VolumeAttachment` 对象，如果 `CSI Plugin` 在同一个 `Pod`
+，调用接口进行 `Volume Attach`
 
 ##### Mount
 
@@ -35,11 +36,11 @@
 ### 概念
 
 - `PV`
-  - 持久化存储卷
+    - 持久化存储卷
 - `PVC`
-  - `PV` 使用请求
+    - `PV` 使用请求
 - `StorageClass`
-  - `PV` 创建模板
+    - `PV` 创建模板
 
 [hostpath](../../../config/example/volume/hostpath.yaml)
 [ceph](../../../config/example/volume/ceph.yaml)
@@ -48,11 +49,31 @@
 
 ##### PV
 
+存储卷，存储系统的一个存储空间对应一个 `PV`
+
 [demo](../../../config/example/volume/pv.yaml)
 
 需要专业的存储知识，一般由运维人员负责
 
+状态
+
+- `Recycle(deprecatedc)`
+    - 弃用，删除 `pvc`，只删除 `pv` 数据不删除资源
+- `Delete`
+    - 同时删除资源
+- `Retain`
+    - 不删除
+
 ##### PVC
+
+`PV` 注册，请求占用 `PV` 到 `Pod` 命名空间
+一个 `PVC` 可以绑定一个 `PV`，该 `pv` 处于 `bingding`，一个命名空间占用一个 `PV`
+
+访问模式
+
+- 单路读写
+- 多路读写
+- 多路只读
 
 [demo](../../../config/example/volume/pvc.yaml)
 

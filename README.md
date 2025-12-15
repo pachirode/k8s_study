@@ -20,7 +20,8 @@ https://www.cnblogs.com/yinzhengjie/tag/Kubernetes/default.html
 
 # 对象
 
-[Service](doc/k8s/service/service.md)
+- [Service](doc/k8s/service/service.md)
+  - [DNS](doc/k8s/service/dns.md)
 
 [Pod](doc/k8s/pod/pod.md)
 
@@ -31,6 +32,8 @@ https://www.cnblogs.com/yinzhengjie/tag/Kubernetes/default.html
 [volume](doc/k8s/volume/volume.md)
 
 [project volume](doc/k8s/volume/project-volume.md)
+
+[nfs mount demo](doc/k8s/volume/pv-mount-flow.md)
 
 # 自动扩缩容
 
