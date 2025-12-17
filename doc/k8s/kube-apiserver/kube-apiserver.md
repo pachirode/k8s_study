@@ -185,3 +185,18 @@ actions = appendIf(actions, action{"LIST", resourcePath, resourceParams, namer, 
 
 `k8s` 只会给版本化的 `API` 设置默认值，内部的 `API` 是不会设置默认值
 
+
+
+# APIServer 分类
+
+### AggregatorServer
+
+负责处理 `apiregistration.k8s.io` 下面的资源请求，同时将请求拦截转发给 `Aggregated APIServer(AA)`
+
+### KubeAPIServer
+
+负责对请求的一些通用处理，认权，鉴权，内部资源访问
+
+### ApiExtensionsServer
+
+`CRD` 用户自定义资源的处理

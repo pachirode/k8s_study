@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-demo
+  labels:
+    app: pod-demo
+    rel: stable
+spec:
+  containers:
+    - name: label-nginx
+      image: nginx
+      imagePullPolicy: IfNotPresent
+    - name: label-box
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      command: [ "/bin/sh","-c","sleep 86400" ]

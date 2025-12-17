@@ -3,6 +3,18 @@
 `Pod` 只是一个逻辑概念，用来描述一组共享某些资源的容器，类似虚拟机
 主要有调度，网络，存储以及安全等相关设置
 
+### 标签和标签选择器
+
+[demo](../../../config/example/pod-demo/pod-label.yaml)
+
+```bash
+kubectl get pods -o wide --show-labels
+NAME       READY   STATUS    RESTARTS   AGE   IP           NODE               NOMINATED NODE   READINESS GATES   LABELS
+pod-demo   2/2     Running   0          72s   10.244.1.2   k8s-test-worker2   <none>           <none>            app=pod-demo,rel=stable
+
+# 动态添加标签
+```
+
 ### 配置文件解析
 
 [demo](../../../config/example/pod-demo/pod.yaml)

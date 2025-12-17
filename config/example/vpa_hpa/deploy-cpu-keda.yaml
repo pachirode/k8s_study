@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+spec:
+  selector:
+    matchLabels:
+      run: php-apache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: php-apache
+    spec:
+      containers:
+        - name: php-apache
+          image: deis/hpa-example
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: 100m
+            requests:
+              cpu: 20m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-apache
+  labels:
+    run: php-apache
+spec:
+  ports:
+    - port: 80
+  selector:
+    run: php-apache
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: cpu
+spec:
+  scaleTargetRef:
+    name: php-apache
+    apiVersion: apps/v1
+    kind: Deployment
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+    - type: cpu
+      metadata:
+        type: Utilization
+        value: "50"

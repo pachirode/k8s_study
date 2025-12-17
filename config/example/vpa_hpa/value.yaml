@@ -1,0 +1,11 @@
+server:
+  tls:
+    enabled: false
+
+operator:
+  webhook:
+    enabled: false
+
+metrics:
+  tls:
+    enabled: false
