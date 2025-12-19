@@ -24,10 +24,6 @@ https://github.com/rootsongjc/kubernetes-handbook
 
 [Service](doc/k8s/service/service.md)
 
-[Pod](doc/k8s/pod/pod.md)
-
-[Deployment](doc/k8s/deployment/deployment.md)
-
 # Volume
 
 [volume](doc/k8s/volume/volume.md)
@@ -48,13 +44,40 @@ https://github.com/rootsongjc/kubernetes-handbook
 
 [metrics-server](doc/k8s/plugins/metrics-server.md)
 
-# 垃圾回收
-
-[gc](doc/k8s/gc/gc.md)
-
 # 接口
 
 [interface](doc/k8s/interface/interface.md)
+
+- [cri](doc/k8s/interface/cri.md)
+- [csi](doc/k8s/interface/csi.md)
+- [cni](doc/k8s/interface/cni.md)
+
+# Pod
+
+[Pod 概述](doc/k8s/pod/pod.md)
+
+- [Pod 解析](doc/k8s/pod/detail.md)
+- [Pod 常见容器](doc/k8s/pod/container.md)
+- [Pod 容器探针](doc/k8s/pod/probe.md)
+- [Pod Hook](doc/k8s/pod/hook.md)
+- [Pod 中断](doc/k8s/pod/pdb.md)
+
+# Cluster
+
+- [Node](doc/k8s/cluster/node.md)
+- [Namespace](doc/k8s/cluster/namespace.md)
+- [label](doc/k8s/cluster/label.md)
+- [annotation](doc/k8s/cluster/annotation.md)
+- [taint](doc/k8s/cluster/taint.md)
+- [gc](doc/k8s/cluster/gc.md)
+- [scheduler](doc/k8s/cluster/scheduler.md)
+
+# Controller
+
+- [deployment](doc/k8s/controllers/deployment.md)
+- [daemonSet](doc/k8s/controllers/daemonset.md)
+- [replicaSet](doc/k8s/controllers/replicaSet.md)
+- [statefulSet](doc/k8s/controllers/statefulSet.md)
 
 # 故障排除
 
