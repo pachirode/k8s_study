@@ -1,8 +1,52 @@
 # HPA
 
 实现自动水平伸缩，即高峰期添加 `Pod` 副本，低谷期删除
+仅适用于 `Deployment` 和 `ReplicaSet`，通过控制循环实现自动扩缩容
 
 [demo](../../../config/example/vpa_hpa/deploy-cpu-hpa.yaml)
+
+### 自定义指标配置
+
+支持自定义之变进行扩缩容
+
+##### 自定义配置
+
+`controller-manager`
+
+```bash
+--horizontal-pod-autoscaler-use-rest-clients=true
+--master=http://API_SERVER_ADDRESS:8080
+```
+
+`API Server`
+
+```bash
+--requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem
+--requestheader-allowed-names=aggregator
+--requestheader-extra-headers-prefix=X-Remote-Extra-
+--requestheader-group-headers=X-Remote-Group
+--requestheader-username-headers=X-Remote-User
+--proxy-client-cert-file=/etc/kubernetes/ssl/kubernetes.pem
+--proxy-client-key-file=/etc/kubernetes/ssl/kubernetes-key.pem
+```
+
+##### API Service
+
+```yaml
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1beta2.custom-metrics.metrics.k8s.io
+spec:
+  insecureSkipTLSVerify: true
+  group: custom-metrics.metrics.k8s.io
+  groupPriorityMinimum: 1000
+  versionPriority: 5
+  service:
+    name: custom-metrics-apiserver
+    namespace: custom-metrics
+  version: v1beta2
+```
 
 ### 基于 CPU 扩容
 

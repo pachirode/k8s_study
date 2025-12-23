@@ -20,10 +20,6 @@ https://github.com/rootsongjc/kubernetes-handbook
 
 ### [flannel](doc/k8s/network/flannel.md)
 
-# 对象
-
-[Service](doc/k8s/service/service.md)
-
 # Volume
 
 [volume](doc/k8s/volume/volume.md)
@@ -33,12 +29,6 @@ https://github.com/rootsongjc/kubernetes-handbook
 [nfs mount demo](doc/k8s/volume/pv-mount-flow.md)
 
 # [kube-apiserver](doc/k8s/kube-apiserver)
-
-# 自动扩缩容
-
-[VPA](doc/k8s/vpa_hpa/vpa.md)
-
-[HPA](doc/k8s/vpa_hpa/hpa.md)
 
 # plugin
 
@@ -78,6 +68,20 @@ https://github.com/rootsongjc/kubernetes-handbook
 - [daemonSet](doc/k8s/controllers/daemonset.md)
 - [replicaSet](doc/k8s/controllers/replicaSet.md)
 - [statefulSet](doc/k8s/controllers/statefulSet.md)
+- [job](doc/k8s/controllers/job.md)
+- [cronJob](doc/k8s/controllers/cronJob.md)
+- [hpa](doc/k8s/controllers/hpa.md)
+- [vpa](doc/k8s/controllers/vpa.md)
+- [keda](doc/k8s/controllers/keda.md)
+- [ingress](doc/k8s/controllers/ingress.md)
+- [admission](doc/k8s/controllers/admission.md)
+
+# 服务发现和路由
+
+- [service](doc/k8s/service/service.md)
+- [ingress](doc/k8s/service/ingress.md)
+- [topology](doc/k8s/service/topology.md)
+- [gateway](doc/k8s/service/gateway.md)
 
 # 故障排除
 

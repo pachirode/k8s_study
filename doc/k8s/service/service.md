@@ -35,6 +35,33 @@ hostnames-64689b4446-mbqc6
 hostnames-64689b4446-t6m5k
 ```
 
+### Service 类型
+
+`NodePort` 和 `LoadBalancer` 均基于 `ClusterIP` 增加外部访问能力
+
+- `ClusterIP`
+    - 仅集群内可访问
+- `NodePort`
+    - 每个节点开放静态端口
+- `LoadBalancer`
+    - 云厂商负载均衡器
+- `ExternalName`
+    - 映射到外部 `DNS` 名称
+
+##### Service 选择器和端点
+
+通过标签选择器确定后端 `Pod`，`k8s` 自动生成 `EndpointSlice` 记录所有匹配的 `Pod` 的 `IP`
+无选择器的 `Service` 可以手动管理 `EndpointSlice`
+
+##### 多端口和 Headless Service
+
+支持多端口暴露，需要对每个端口命名
+`Headless Service` 不提供统一的 `IP`，而是直接暴露所有后端 `Pod` 的 `IP`，适用于点对点连接的有状态应用
+
+##### EndpointSlice
+
+控制面板自动为带选择器的 `Service` 创建和维护 `EndpointSlice`，每个 `Slice` 包含一组端点的地址，端口和状态
+
 ### 流程
 
 `Service` 是由 `kube-proxy` 组件，加上 `iptables` 来共同实现的
@@ -80,6 +107,19 @@ iptables-save | grep KUBE-SVC-ODX2UBAZM7RQWOIU
 `DNAT`在路由检查之前，将流入 `IP` 包的目的地址和端口修改为 `–to-destination` 所指定的新的目的地址和端口
 通过处理之后 `Service VIP` 的 `IP` 包被定位到访问某个具体的 `Pod` 包
 
+### 网络策略
+
+`NetworkPolict` 允许基于标签选择器定义 `Pod` 的网络访问规则，实现细颗粒的流量隔离
+
+- `Ingress`
+    - 入站流量控制
+- `Engress`
+    - 出站流量控制
+
+### 双栈网络
+
+可以同时分配 `IPv4` 和 `IPv6`
+
 ### IPVS 模式
 
 `kube-proxy` 通过 `iptables` 处理 `Service` 的过程，需要在宿主机上设置 `iptables` 规则，同时还需要不断的刷新这些规则
@@ -101,6 +141,39 @@ iptables-save | grep KUBE-SVC-ODX2UBAZM7RQWOIU
 ，当访问这条记录，解析的就是该 `Service` 的 `VIP` 地址
 对 `Headless Service`，它的 `A` 记录格式为 `<podName>.<serviceName>.<namesapce>.svc.cluster.local`
 ，访问记录时，返回的是所有被代理的 `Pod` 的 `IP` 地址的集合
+
+##### Service DNS
+
+普通的 `Service` 在 `my-service.my-namespace.svc.cluster.local` 生成 `A/AAA` 记录
+`Headless Service` 为每个后端 `Pod` 生成独立记录
+
+##### Pod DNS
+
+可以通过 `dnsPolicy` 和 `dnsConfig` 字段配置 `Pod` 的 `DNS` 行为
+
+- `Default`
+    - 继承节点 `DNS` 配置
+- `ClusterFirst`
+    - 优先使用集群 `DNS`
+- `ClusterFirstWithHostNet`
+    - `hostNetwork Pod` 专用
+- `None`
+    - 忽略集群 `DNS` 设置
+
+### Ingress 入口
+
+用于将集群外部的 `HTTP/HTTPS` 流量路由到集群内 `Service`，支持基于主机名和路径的转发
+
+##### 路径
+
+`Ingress` 支持多种路径匹配方式
+
+- `Prefix`
+    - 按 `/` 分割的前缀匹配
+- `Exact`
+    - 精确的路径匹配
+- `ImplementationSpecific`
+    - 由 `IngressClass` 决定
 
 ### 访问方式
 

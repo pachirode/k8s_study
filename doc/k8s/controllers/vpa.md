@@ -23,7 +23,7 @@
 
 ### 流程
 
-[流程](./flow.puml)
+[流程](flow.puml)
 
 ##### Recommender
 
