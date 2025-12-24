@@ -16,18 +16,6 @@ https://github.com/rootsongjc/kubernetes-handbook
 
 ### [Kind](doc/k8s/kind使用.md)
 
-# 网络
-
-### [flannel](doc/k8s/network/flannel.md)
-
-# Volume
-
-[volume](doc/k8s/volume/volume.md)
-
-[project volume](doc/k8s/volume/project-volume.md)
-
-[nfs mount demo](doc/k8s/volume/pv-mount-flow.md)
-
 # [kube-apiserver](doc/k8s/kube-apiserver)
 
 # plugin
@@ -82,6 +70,27 @@ https://github.com/rootsongjc/kubernetes-handbook
 - [ingress](doc/k8s/service/ingress.md)
 - [topology](doc/k8s/service/topology.md)
 - [gateway](doc/k8s/service/gateway.md)
+
+# 身份验证
+
+- [service account](doc/k8s/auth/service-account.md)
+- [rbac](doc/k8s/auth/rbac.md)
+- [spiffe](doc/k8s/auth/spiffe.md)
+- [spier](doc/k8s/auth/spier.md)
+
+# 网络
+
+- [flannel](doc/k8s/network/flannel.md)
+- [calico](doc/k8s/network/calico.md)
+
+# 存储
+
+- [secret](doc/k8s/storage/secret.md)
+- [configMap](doc/k8s/storage/configmap.md)
+- [volume](doc/k8s/storage/volume.md)
+- [pv](doc/k8s/storage/pv.md)
+- [project volume](doc/k8s/volume/project-volume.md)
+- [nfs mount demo](doc/k8s/volume/pv-mount-flow.md)
 
 # 故障排除
 
