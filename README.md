@@ -10,13 +10,23 @@ https://www.cnblogs.com/yinzhengjie/tag/Kubernetes/default.html
 
 https://github.com/rootsongjc/kubernetes-handbook
 
-# 创建集群
+# 介绍
 
-[集群部署](doc/k8s/集群部署.md)
+- [go 版本](doc/k8s/info/go版本.md)
+- [配置分类](doc/k8s/info/config.md)
+- [k8s 简述](doc/k8s/info/k8s.md)
+- [k8s 项目结构](doc/k8s/info/k8s项目结构.md)
+- [领导者选举](doc/k8s/info/领导者选举.md)
+    - [demo](internal/leader-election)
 
-### [Kind](doc/k8s/kind使用.md)
+# 部署
 
-# [kube-apiserver](doc/k8s/kube-apiserver)
+- [常见的部署方式](doc/k8s/install/集群部署.md)
+- [kind 使用](doc/k8s/install/kind使用.md)
+- [二进制安装](doc/k8s/install/二进制安装.md)
+- [源码](scripts/build_k8s/README.md)
+- [helm](scripts/k8s/helm)
+- [nfs](scripts/k8s/volume)
 
 # plugin
 
@@ -39,8 +49,9 @@ https://github.com/rootsongjc/kubernetes-handbook
 - [Pod 容器探针](doc/k8s/pod/probe.md)
 - [Pod Hook](doc/k8s/pod/hook.md)
 - [Pod 中断](doc/k8s/pod/pdb.md)
+- [Pod 创建流程](doc/k8s/pod/pod创建流程.md)
 
-# Cluster
+# 资源
 
 - [Node](doc/k8s/cluster/node.md)
 - [Namespace](doc/k8s/cluster/namespace.md)
@@ -50,9 +61,10 @@ https://github.com/rootsongjc/kubernetes-handbook
 - [gc](doc/k8s/cluster/gc.md)
 - [scheduler](doc/k8s/cluster/scheduler.md)
 
-# Controller
+# 控制器
 
 - [deployment](doc/k8s/controllers/deployment.md)
+    - [案例](doc/k8s/controllers/deployment-demo.md)
 - [daemonSet](doc/k8s/controllers/daemonset.md)
 - [replicaSet](doc/k8s/controllers/replicaSet.md)
 - [statefulSet](doc/k8s/controllers/statefulSet.md)
@@ -92,7 +104,12 @@ https://github.com/rootsongjc/kubernetes-handbook
 - [project volume](doc/k8s/volume/project-volume.md)
 - [nfs mount demo](doc/k8s/volume/pv-mount-flow.md)
 
-# 故障排除
+# 集群
 
-[service](doc/k8s/debug/service/service.md)
-
+- [多集群](doc/k8s/cluster/multi-cluste.md)
+- 集群安全
+    - [TLS](doc/k8s/cluster/tls.md)
+    - [TLS Bootstrap](doc/k8s/cluster/tls-bootstrap.md)
+    - [IP伪装](doc/k8s/cluster/ip-spoofing.md)
+    - [认证授权](doc/k8s/cluster/auth.md)
+    - [常用设置](doc/k8s/cluster/setting.md)

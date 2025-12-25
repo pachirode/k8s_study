@@ -11,7 +11,7 @@
 
 ##### 二进制安装
 
-[install_kind.sh](../../scripts/kind/install_kind.sh)
+[install_kind.sh](../../../scripts/kind/install_kind.sh)
 
 ### 集群配置
 
@@ -19,7 +19,7 @@
 
 使用 `kubeadm` 创建和配置，通过 `Kubeadm Config Patches`
 机制提供各种配置 [Configuration](https://kind.sigs.k8s.io/docs/user/configuration/)
-[Configuration_example](../../config/example/kind/Configuration.yaml)
+[Configuration_example](../../../config/example/kind/Configuration.yaml)
 
 ### 端口映射
 
