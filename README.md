@@ -68,6 +68,7 @@ https://github.com/rootsongjc/kubernetes-handbook
 - [daemonSet](doc/k8s/controllers/daemonset.md)
 - [replicaSet](doc/k8s/controllers/replicaSet.md)
 - [statefulSet](doc/k8s/controllers/statefulSet.md)
+    - [案例](doc/k8s/controllers/statefulset-demo.md)
 - [job](doc/k8s/controllers/job.md)
 - [cronJob](doc/k8s/controllers/cronJob.md)
 - [hpa](doc/k8s/controllers/hpa.md)
@@ -125,3 +126,8 @@ https://github.com/rootsongjc/kubernetes-handbook
     - [service](doc/k8s/cluster/access-service.md)
     - [外部](doc/k8s/cluster/access-external.md)
     - [dashboard](doc/k8s/cluster/access-dashboard.md)
+
+# 开发部署
+
+- [流程](doc/k8s/develop/deploy-info.md)
+- [argo](doc/k8s/develop/argo.md)
